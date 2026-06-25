@@ -11,4 +11,4 @@ PORT="${MYTOOLS_PORT:-8765}"
 echo "启动 MyTools (我的工具箱) ..."
 echo "访问地址: http://${HOST}:${PORT}"
 
-python -m uvicorn web.main:app --host "$HOST" --port "$PORT" --reload --log-config web/log_config.py
+python web/main.py
