@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown转PDF - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="page-markdown-pdf">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>📄 Markdown 转 PDF</h1>
+      <p class="subtitle">将 Markdown 文档转换为 PDF，支持标题、代码块、表格等</p>
+      <p class="subtitle-en">Markdown to PDF</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="toolbar">
+        <button class="btn btn-primary btn-sm" id="convertBtn">生成 PDF</button>
+        <button class="btn btn-secondary btn-sm" id="clearBtn">清空</button>
+        <button class="btn btn-secondary btn-sm" id="exampleBtn">填入示例</button>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+          上传 .md
+          <input type="file" id="fileInput" accept=".md,.markdown,.txt" hidden>
+        </label>
+        <label style="font-size:0.85rem;color:var(--text-muted);margin-left:0.5rem;">
+          文件名
+          <input type="text" id="filenameInput" value="document.pdf" style="margin-left:0.25rem;padding:0.25rem 0.5rem;border-radius:6px;border:1px solid var(--border);width:140px;">
+        </label>
+      </div>
+
+      <div class="json-panel md-editor-panel">
+        <div class="panel-header">
+          <span>Markdown 内容</span>
+        </div>
+        <textarea id="markdownInput" class="json-textarea json-panel-body" placeholder="# 在此输入 Markdown..."></textarea>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/markdown_pdf.js"></script>
+</body>
+</html>

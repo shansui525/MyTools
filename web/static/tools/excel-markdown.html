@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Excel转Markdown - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css?v=5">
+</head>
+<body class="page-excel-markdown">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>📋 Excel 转 Markdown</h1>
+      <p class="subtitle">将 Excel 表格转为极致压缩的 Markdown，无多余空格，分隔符最短</p>
+      <p class="subtitle-en">Excel to Markdown</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="toolbar">
+        <input type="file" id="fileInput" class="file-input-offscreen" accept=".xlsx,.xls,.xlsm">
+        <button type="button" class="btn btn-primary btn-sm" id="pickFileBtn">上传 Excel</button>
+        <button type="button" class="btn btn-primary btn-sm" id="convertBtn" disabled>转换</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="copyBtn">复制结果</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="clearBtn">清空</button>
+        <select id="sheetSelect" class="excel-md-select" disabled>
+          <option value="all">全部工作表</option>
+        </select>
+        <label class="excel-md-option">
+          <input type="checkbox" id="withHeader" checked> 首行作表头
+        </label>
+        <label class="excel-md-option">
+          <input type="checkbox" id="includeSheetTitle" checked> 多 Sheet 加标题
+        </label>
+        <span class="excel-md-stats" id="statsInfo"></span>
+      </div>
+
+      <div class="json-panels">
+        <div class="json-panel">
+          <div class="panel-header">
+            <span id="fileLabel">Excel 文件</span>
+          </div>
+          <div class="excel-md-file-info excel-md-upload-zone" id="fileInfoWrap">
+            <button type="button" class="excel-md-upload-trigger" id="fileZoneBtn">
+              点击此处或上方「上传 Excel」选择 .xlsx / .xls / .xlsm 文件
+            </button>
+            <div class="excel-md-file-name hidden" id="fileInfoName"></div>
+          </div>
+        </div>
+        <div class="json-panel">
+          <div class="panel-header">
+            <span>Markdown 输出（压缩）</span>
+          </div>
+          <textarea id="mdOutput" class="json-textarea json-panel-body" readonly placeholder="转换结果将显示在这里"></textarea>
+        </div>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/excel_markdown.js?v=5"></script>
+</body>
+</html>

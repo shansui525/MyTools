@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel文件对比 - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css?v=5">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>📊 Excel 文件对比</h1>
+      <p class="subtitle">对比两个 Excel 文件的差异，支持指定工作表，差异单元格高亮标注</p>
+      <p class="subtitle-en">Excel Comparator</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>上传文件</h2>
+      <form id="compareForm">
+        <div class="form-group">
+          <label>文件 A</label>
+          <input type="file" id="fileA" class="file-input-offscreen" accept=".xlsx,.xls,.xlsm">
+          <div class="excel-compare-file-row">
+            <button type="button" class="btn btn-secondary btn-sm" id="pickFileA">选择文件 A</button>
+            <span class="excel-compare-file-name" id="fileAName">未选择文件</span>
+          </div>
+          <select id="sheetA" class="excel-compare-sheet-select" disabled>
+            <option value="">请先选择文件</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>文件 B</label>
+          <input type="file" id="fileB" class="file-input-offscreen" accept=".xlsx,.xls,.xlsm">
+          <div class="excel-compare-file-row">
+            <button type="button" class="btn btn-secondary btn-sm" id="pickFileB">选择文件 B</button>
+            <span class="excel-compare-file-name" id="fileBName">未选择文件</span>
+          </div>
+          <select id="sheetB" class="excel-compare-sheet-select" disabled>
+            <option value="">请先选择文件</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>对比模式</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="mode" value="direct" checked>
+              直接对比 — 按行号逐单元格对比
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="mode" value="key">
+              主键对比 — 按主键列对齐后对比
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" id="keysGroup" style="display:none">
+          <label for="keys">主键列名</label>
+          <input type="text" id="keys" name="keys" placeholder="多个列名用逗号分隔，如：姓名,部门">
+          <p class="hint">主键列的值将拼接后用于对齐两个文件的行</p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">开始对比</button>
+      </form>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <span>正在对比，请稍候...</span>
+      </div>
+
+      <div class="message" id="message"></div>
+    </section>
+
+    <section class="card">
+      <h2>使用说明</h2>
+      <ul style="padding-left: 1.25rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.8;">
+        <li><strong>差异索引</strong>：结果文件第一个 Sheet 列出所有有差异的行，含差异列名与详情；点击「明细行号」可跳转到明细数据对应行。</li>
+        <li><strong>差异摘要</strong>：明细数据最左侧固定列汇总该行有哪些列存在差异，列很多时无需横向滚动查找。</li>
+        <li><strong>工作表选择</strong>：上传文件后自动读取工作表列表，可分别指定文件 A 与文件 B 要对比的 Sheet；不选则默认第一个工作表。</li>
+        <li><strong>直接对比</strong>：两个文件按相同行列位置逐单元格比较，适合结构完全一致的数据。</li>
+        <li><strong>主键对比</strong>：先按指定主键列对齐行，再逐单元格比较，适合行顺序不同但主键相同的数据。</li>
+        <li>差异单元格会以黄色背景标注；仅 A 有为浅绿色，仅 B 有为浅红色，并显示「原值-->(对比值)」。</li>
+        <li>对比完成后自动下载结果 Excel 文件。</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/excel_compare.js?v=3"></script>
+</body>
+</html>

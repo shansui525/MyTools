@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>年历 - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="page-calendar">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>📅 年历</h1>
+      <p class="subtitle">3×4 年历排版，标注常见节日，支持自定义事件，按界面导出图片/PDF</p>
+      <p class="subtitle-en">Year Calendar</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card calendar-card">
+      <div class="toolbar calendar-toolbar">
+        <label class="calendar-year-label">
+          年份
+          <input type="number" id="yearInput" class="calendar-year-input" min="1970" max="2100" value="2026">
+        </label>
+        <button class="btn btn-secondary btn-sm" id="prevYearBtn" title="上一年">&larr;</button>
+        <button class="btn btn-secondary btn-sm" id="nextYearBtn" title="下一年">&rarr;</button>
+        <button class="btn btn-primary btn-sm" id="exportImageBtn">导出图片</button>
+        <button class="btn btn-secondary btn-sm" id="exportPdfBtn">导出 PDF (A4)</button>
+        <span class="calendar-legend calendar-toolbar-legend">
+          <span class="legend-item"><i class="legend-dot holiday"></i>节日</span>
+          <span class="legend-item"><i class="legend-dot event"></i>有事件</span>
+          <span class="legend-item"><i class="legend-dot weekend"></i>周末</span>
+        </span>
+      </div>
+
+      <div class="calendar-export-area" id="calendarExportArea">
+        <h2 class="calendar-year-title" id="calendarYearTitle">2026年日历</h2>
+        <div class="calendar-grid" id="calendarGrid">
+          <div class="calendar-loading">加载中...</div>
+        </div>
+        <div class="calendar-export-legend">
+          <span class="legend-item"><i class="legend-dot holiday"></i>节日</span>
+          <span class="legend-item"><i class="legend-dot event"></i>有事件</span>
+          <span class="legend-item"><i class="legend-dot weekend"></i>周末</span>
+        </div>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <!-- 事件编辑弹窗 -->
+  <div class="calendar-modal hidden" id="eventModal">
+    <div class="calendar-modal-backdrop" id="modalBackdrop"></div>
+    <div class="calendar-modal-panel">
+      <div class="calendar-modal-header">
+        <h3 id="modalDateTitle">2026-01-01</h3>
+        <button class="calendar-modal-close" id="modalCloseBtn" type="button">&times;</button>
+      </div>
+      <div class="calendar-modal-body">
+        <p class="calendar-modal-holiday hidden" id="modalHoliday"></p>
+        <label class="calendar-modal-label">事件（每行一条）</label>
+        <textarea id="modalEventsInput" class="json-textarea calendar-events-input" rows="5" placeholder="输入事件，每行一条"></textarea>
+      </div>
+      <div class="calendar-modal-footer">
+        <button class="btn btn-secondary btn-sm" id="modalClearBtn">清空</button>
+        <button class="btn btn-primary btn-sm" id="modalSaveBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/vendor/html2canvas.min.js"></script>
+  <script src="/static/vendor/jspdf.umd.min.js"></script>
+  <script src="/static/tools/calendar.js"></script>
+</body>
+</html>

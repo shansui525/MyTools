@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQLite查询 - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="page-sqlite-browser">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>🗄️ SQLite 查询</h1>
+      <p class="subtitle">链接本地 SQLite 文件，浏览元数据、执行 SQL、自动保存历史</p>
+      <p class="subtitle-en">SQLite Browser</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card sqlite-card">
+      <div class="toolbar">
+        <div class="sqlite-path-row">
+          <input type="text" id="dbPathInput" class="sqlite-path-input" placeholder="本地数据库路径，如 /Users/me/data/app.db 或 ~/data/app.db">
+          <button class="btn btn-primary btn-sm" id="linkDbBtn">打开</button>
+        </div>
+        <select id="dbSelect" class="sqlite-db-select">
+          <option value="">— 选择已链接的数据库 —</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" id="refreshMetaBtn" disabled>刷新元数据</button>
+        <button class="btn btn-danger btn-sm" id="removeDbBtn" disabled>移除连接</button>
+        <span class="sqlite-db-info" id="dbInfo"></span>
+      </div>
+
+      <div class="sqlite-workspace">
+        <!-- 元数据 -->
+        <aside class="sqlite-sidebar" id="metaPanel">
+          <div class="sqlite-panel-title">元数据</div>
+          <div class="sqlite-meta-empty" id="metaEmpty">请先链接并选择本地数据库</div>
+          <div class="sqlite-meta-tree hidden" id="metaTree"></div>
+        </aside>
+
+        <!-- SQL + 结果 -->
+        <div class="sqlite-main">
+          <div class="sqlite-editor-section">
+            <div class="panel-header">
+              <span>SQL 编辑器</span>
+              <div class="panel-actions">
+                <button class="btn btn-primary btn-sm" id="runBtn" disabled>执行 (Ctrl+Enter)</button>
+                <button class="btn btn-secondary btn-sm" id="clearSqlBtn">清空</button>
+              </div>
+            </div>
+            <textarea id="sqlInput" class="json-textarea sqlite-sql-input" placeholder="输入 SQL，例如：SELECT * FROM users LIMIT 10;" disabled></textarea>
+          </div>
+          <div class="sqlite-result-section">
+            <div class="panel-header">
+              <span>查询结果</span>
+              <span class="sqlite-result-msg" id="resultMsg"></span>
+            </div>
+            <div class="sqlite-result-wrap" id="resultWrap">
+              <div class="sqlite-result-empty">执行 SQL 后在此显示结果</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 历史 -->
+        <aside class="sqlite-history-panel">
+          <div class="sqlite-panel-title">
+            执行历史
+            <button class="btn btn-secondary btn-sm" id="clearHistoryBtn" title="清除历史">清除</button>
+          </div>
+          <div class="sqlite-history-list" id="historyList">
+            <div class="sqlite-meta-empty">暂无历史记录</div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/sqlite_browser.js?v=2"></script>
+</body>
+</html>

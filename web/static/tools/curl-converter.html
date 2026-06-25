@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>curl转requests - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="page-curl-converter">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>🔄 curl 转 requests</h1>
+      <p class="subtitle">将 curl / bash 请求命令转换为 Python requests 代码</p>
+      <p class="subtitle-en">curl to Python requests</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="toolbar">
+        <button class="btn btn-primary btn-sm" id="convertBtn">转换</button>
+        <button class="btn btn-secondary btn-sm" id="clearBtn">清空</button>
+        <button class="btn btn-secondary btn-sm" id="copyBtn">复制代码</button>
+        <button class="btn btn-secondary btn-sm" id="exampleBtn">填入示例</button>
+        <label style="font-size:0.85rem;color:var(--text-muted);margin-left:auto;">
+          <input type="checkbox" id="includeResponse" checked> 包含响应打印
+        </label>
+      </div>
+
+      <div class="json-panels">
+        <div class="json-panel">
+          <div class="panel-header">
+            <span>curl 命令</span>
+          </div>
+          <textarea id="curlInput" class="json-textarea json-panel-body" placeholder="粘贴 curl 命令，支持多行与 \ 续行..."></textarea>
+        </div>
+        <div class="json-panel">
+          <div class="panel-header">
+            <span>Python requests 代码</span>
+          </div>
+          <textarea id="codeOutput" class="json-textarea json-panel-body" readonly placeholder="转换结果将显示在这里"></textarea>
+        </div>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/curl_converter.js"></script>
+</body>
+</html>

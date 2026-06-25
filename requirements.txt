@@ -1,0 +1,16 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
+pandas>=2.0.0
+openpyxl>=3.1.0
+xlrd>=2.0.0
+cryptography>=42.0.0
+markdown>=3.5.0
+Pygments>=2.17.0
+fpdf2>=2.7.0
+sqlparse>=0.5.0
+zhdate>=0.1
+gmssl>=3.2.0
+APScheduler>=3.10.0
+mammoth>=1.6.0
+html2text>=2024.2.26

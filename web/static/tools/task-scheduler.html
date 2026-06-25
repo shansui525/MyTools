@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>定时调度器 - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="page-task-scheduler">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>⏰ 定时调度器</h1>
+      <p class="subtitle">Cron 定时执行已有 Python 脚本，填写脚本路径与解释器路径，上次未结束则跳过本次调度</p>
+      <p class="subtitle-en">Task Scheduler</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card scheduler-card">
+      <div class="toolbar">
+        <button class="btn btn-primary btn-sm" id="newTaskBtn">新建任务</button>
+        <button class="btn btn-primary btn-sm" id="saveTaskBtn">保存</button>
+        <button class="btn btn-secondary btn-sm" id="runNowBtn">立即执行</button>
+        <button class="btn btn-secondary btn-sm" id="toggleTaskBtn">启用/停用</button>
+        <button class="btn btn-danger btn-sm" id="deleteTaskBtn">删除</button>
+        <button class="btn btn-secondary btn-sm" id="refreshBtn">刷新</button>
+        <label class="scheduler-auto-refresh">
+          <input type="checkbox" id="autoRefresh" checked> 自动刷新日志
+        </label>
+      </div>
+
+      <div class="scheduler-workspace">
+        <aside class="scheduler-sidebar">
+          <div class="scheduler-panel-title">任务列表</div>
+          <div class="scheduler-task-list" id="taskList">
+            <div class="scheduler-empty">暂无任务，点击「新建任务」</div>
+          </div>
+        </aside>
+
+        <div class="scheduler-main">
+          <div class="scheduler-form-section">
+            <div class="panel-header">
+              <span id="formTitle">任务配置</span>
+              <span class="scheduler-status-badge" id="taskStatus"></span>
+            </div>
+            <div class="scheduler-form">
+              <label class="scheduler-field">
+                <span>任务名称</span>
+                <input type="text" id="taskName" placeholder="例如：每日数据同步">
+              </label>
+              <label class="scheduler-field">
+                <span>Python 路径</span>
+                <input type="text" id="pythonPath" placeholder="留空则使用当前服务 Python">
+              </label>
+              <div class="scheduler-form-row-split">
+                <label class="scheduler-field">
+                  <span>Cron <small>(分 时 日 月 周)</small></span>
+                  <div class="scheduler-cron-row">
+                    <input type="text" id="cronExpr" placeholder="0 9 * * *">
+                    <button type="button" class="btn btn-secondary btn-sm" id="validateCronBtn">校验</button>
+                  </div>
+                </label>
+                <label class="scheduler-field">
+                  <span>Python 脚本路径</span>
+                  <input type="text" id="scriptPath" placeholder="/path/to/your_script.py">
+                </label>
+              </div>
+              <div class="scheduler-form-meta">
+                <span class="scheduler-cron-hint" id="cronHint">示例：*/5 * * * * 每5分钟 · 0 9 * * * 每天9点</span>
+                <span class="scheduler-cron-desc" id="cronDesc"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="scheduler-log-section">
+            <div class="panel-header">
+              <span>执行日志</span>
+              <div class="scheduler-log-tabs" id="logTabs"></div>
+              <button class="btn btn-secondary btn-sm" id="clearLogViewBtn">清空显示</button>
+            </div>
+            <pre class="scheduler-log-output" id="logOutput">选择任务后查看日志</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/task_scheduler.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>加解密实验室 - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="page-crypto-lab">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>🔬 加解密实验室</h1>
+      <p class="subtitle">对称/非对称/国密算法与常见编码，输入明文输出密文，附带 Python 与 JavaScript 示例</p>
+      <p class="subtitle-en">Crypto Lab</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card crypto-card">
+      <div class="toolbar">
+        <button class="btn btn-primary btn-sm" id="runBtn">执行</button>
+        <button class="btn btn-secondary btn-sm" id="swapBtn" title="加密/解密或编码/解码互换">切换方向</button>
+        <button class="btn btn-secondary btn-sm" id="exampleBtn">填入示例</button>
+        <button class="btn btn-secondary btn-sm" id="clearBtn">清空</button>
+        <button class="btn btn-secondary btn-sm" id="copyResultBtn">复制结果</button>
+        <button class="btn btn-secondary btn-sm hidden" id="genKeysBtn">生成密钥对</button>
+        <span class="crypto-gmssl-warn hidden" id="gmsslWarn">国密算法需要安装 gmssl 包</span>
+      </div>
+
+      <div class="crypto-workspace">
+        <aside class="crypto-sidebar">
+          <div class="crypto-panel-title">算法分类</div>
+          <div class="crypto-categories" id="categoryList"></div>
+          <div class="crypto-panel-title crypto-algo-title">算法列表</div>
+          <div class="crypto-algo-list" id="algoList"></div>
+        </aside>
+
+        <div class="crypto-main">
+          <div class="crypto-info" id="algoInfo">
+            <div class="crypto-info-empty">请从左侧选择算法</div>
+          </div>
+
+          <div class="crypto-actions hidden" id="actionBar"></div>
+
+          <div class="crypto-form hidden" id="paramForm"></div>
+
+          <div class="crypto-input-section">
+            <div class="panel-header">
+              <span id="inputLabel">输入</span>
+              <div class="panel-actions crypto-format-row">
+                <label class="crypto-format-label">输入格式</label>
+                <select id="inputFormat" class="crypto-select">
+                  <option value="text">文本</option>
+                  <option value="hex">Hex</option>
+                  <option value="base64">Base64</option>
+                </select>
+                <label class="crypto-format-label">输出格式</label>
+                <select id="outputFormat" class="crypto-select">
+                  <option value="">默认</option>
+                  <option value="text">文本</option>
+                  <option value="hex">Hex</option>
+                  <option value="base64">Base64</option>
+                </select>
+              </div>
+            </div>
+            <textarea id="textInput" class="json-textarea crypto-text-input" placeholder="输入明文或密文..."></textarea>
+          </div>
+        </div>
+
+        <aside class="crypto-right">
+          <div class="crypto-panel-title">输出结果</div>
+          <textarea id="resultOutput" class="json-textarea crypto-result-output" readonly placeholder="执行后显示结果"></textarea>
+
+          <div class="crypto-code-tabs">
+            <button class="crypto-code-tab active" data-tab="python">Python</button>
+            <button class="crypto-code-tab" data-tab="javascript">JavaScript</button>
+            <button class="btn btn-secondary btn-sm crypto-copy-code" id="copyCodeBtn">复制代码</button>
+          </div>
+          <textarea id="codeOutput" class="json-textarea crypto-code-output" readonly placeholder="示例代码将显示在这里"></textarea>
+        </aside>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/crypto_lab.js"></script>
+</body>
+</html>

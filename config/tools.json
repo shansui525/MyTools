@@ -1,0 +1,178 @@
+{
+  "app": {
+    "title_zh": "我的工具箱",
+    "title_en": "MyTools",
+    "description": "多功能在线工具集合，每个工具独立运行"
+  },
+  "groups": [
+    {
+      "id": "compare",
+      "name_zh": "对比工具",
+      "name_en": "Compare",
+      "icon": "⚖️"
+    },
+    {
+      "id": "format",
+      "name_zh": "格式化",
+      "name_en": "Format",
+      "icon": "✨"
+    },
+    {
+      "id": "dev",
+      "name_zh": "开发工具",
+      "name_en": "Developer",
+      "icon": "🛠️"
+    },
+    {
+      "id": "daily",
+      "name_zh": "日常工具",
+      "name_en": "Daily",
+      "icon": "📌"
+    }
+  ],
+  "tools": [
+    {
+      "id": "excel-compare",
+      "group": "compare",
+      "name_zh": "Excel文件对比",
+      "name_en": "Excel Comparator",
+      "description": "对比两个 Excel 文件的差异，支持指定工作表、直接对比和主键对比，差异单元格高亮标注",
+      "icon": "📊",
+      "enabled": true,
+      "route": "/tools/excel-compare",
+      "api_prefix": "/api/tools/excel-compare"
+    },
+    {
+      "id": "text-diff",
+      "group": "compare",
+      "name_zh": "文本对比",
+      "name_en": "Text Diff",
+      "description": "对比两段文本差异，差异行与字符高亮显示，支持文件上传",
+      "icon": "📝",
+      "enabled": true,
+      "route": "/tools/text-diff",
+      "api_prefix": "/api/tools/text-diff"
+    },
+    {
+      "id": "json-formatter",
+      "group": "format",
+      "name_zh": "JSON格式化",
+      "name_en": "JSON Formatter",
+      "description": "JSON 格式化、压缩、校验，支持上传文件与键名排序",
+      "icon": "{ }",
+      "enabled": true,
+      "route": "/tools/json-formatter",
+      "api_prefix": "/api/tools/json-formatter"
+    },
+    {
+      "id": "sql-formatter",
+      "group": "format",
+      "name_zh": "SQL格式化",
+      "name_en": "SQL Formatter",
+      "description": "SQL 缩进美化，关键字高亮，表名差异化展示",
+      "icon": "✨",
+      "enabled": true,
+      "route": "/tools/sql-formatter",
+      "api_prefix": "/api/tools/sql-formatter"
+    },
+    {
+      "id": "excel-markdown",
+      "group": "format",
+      "name_zh": "Excel转Markdown",
+      "name_en": "Excel to Markdown",
+      "description": "Excel 表格转极致压缩 Markdown，无多余空格，最短表格分隔符",
+      "icon": "📋",
+      "enabled": true,
+      "route": "/tools/excel-markdown",
+      "api_prefix": "/api/tools/excel-markdown"
+    },
+    {
+      "id": "word-markdown",
+      "group": "format",
+      "name_zh": "Word转Markdown",
+      "name_en": "Word to Markdown",
+      "description": "Word 文档转 Markdown，保留标题、段落、列表与表格结构",
+      "icon": "📄",
+      "enabled": true,
+      "route": "/tools/word-markdown",
+      "api_prefix": "/api/tools/word-markdown"
+    },
+    {
+      "id": "curl-converter",
+      "group": "dev",
+      "name_zh": "curl转requests",
+      "name_en": "curl to requests",
+      "description": "将 curl / bash 请求命令转换为 Python requests 代码",
+      "icon": "🔄",
+      "enabled": true,
+      "route": "/tools/curl-converter",
+      "api_prefix": "/api/tools/curl-converter"
+    },
+    {
+      "id": "sqlite-browser",
+      "group": "dev",
+      "name_zh": "SQLite查询",
+      "name_en": "SQLite Browser",
+      "description": "链接本地 SQLite 文件，浏览元数据、执行 SQL 查询，自动保存执行历史",
+      "icon": "🗄️",
+      "enabled": true,
+      "route": "/tools/sqlite-browser",
+      "api_prefix": "/api/tools/sqlite-browser"
+    },
+    {
+      "id": "crypto-lab",
+      "group": "dev",
+      "name_zh": "加解密实验室",
+      "name_en": "Crypto Lab",
+      "description": "对称/非对称/国密算法与 Base64 等编码，输入明文输出密文，附带 Python 与 JavaScript 示例",
+      "icon": "🔬",
+      "enabled": true,
+      "route": "/tools/crypto-lab",
+      "api_prefix": "/api/tools/crypto-lab"
+    },
+    {
+      "id": "task-scheduler",
+      "group": "dev",
+      "name_zh": "定时调度器",
+      "name_en": "Task Scheduler",
+      "description": "Cron 定时执行已有 Python 脚本，可指定解释器与脚本路径，支持多任务与执行日志",
+      "icon": "⏰",
+      "enabled": true,
+      "route": "/tools/task-scheduler",
+      "api_prefix": "/api/tools/task-scheduler"
+    },
+    {
+      "id": "password-manager",
+      "group": "daily",
+      "name_zh": "密码管理器",
+      "name_en": "Password Manager",
+      "description": "安全存储网站、电脑等账号密码，AES-256 加密，支持 JSON/CSV/加密备份导出",
+      "icon": "🔐",
+      "enabled": true,
+      "route": "/tools/password-manager",
+      "api_prefix": "/api/tools/password-manager"
+    },
+    {
+      "id": "markdown-pdf",
+      "group": "daily",
+      "name_zh": "Markdown转PDF",
+      "name_en": "Markdown to PDF",
+      "description": "将 Markdown 文档转换为 PDF，支持代码块、表格、中文排版",
+      "icon": "📄",
+      "enabled": true,
+      "route": "/tools/markdown-pdf",
+      "api_prefix": "/api/tools/markdown-pdf"
+    },
+    {
+      "id": "calendar",
+      "group": "daily",
+      "name_zh": "年历",
+      "name_en": "Year Calendar",
+      "description": "3×4 年历排版，标注常见节日，支持自定义事件，按界面导出图片/PDF",
+      "icon": "📅",
+      "enabled": true,
+      "route": "/tools/calendar",
+      "api_prefix": "/api/tools/calendar"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+# --- 运行时数据（数据库、日志、历史、上传副本等，启动时自动创建）---
+data/
+
+# --- 日志 ---
+*.log
+logs/
+
+# --- 数据库文件（含项目外误放）---
+*.db
+*.sqlite
+*.sqlite3
+*.db3
+
+# --- 环境与密钥 ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# --- 虚拟环境 ---
+.venv/
+venv/
+env/
+
+# --- 测试 / 类型检查缓存 ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# --- IDE / 系统 ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- 临时文件 ---
+*.tmp
+*.temp
+.cache/

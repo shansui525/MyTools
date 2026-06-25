@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL格式化 - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="page-sql-formatter">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>SQL 格式化</h1>
+      <p class="subtitle">SQL 缩进美化，关键字与表名高亮展示</p>
+      <p class="subtitle-en">SQL Formatter</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="toolbar">
+        <button class="btn btn-primary btn-sm" id="formatBtn">格式化</button>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+          上传文件
+          <input type="file" id="fileInput" accept=".sql,.txt" hidden>
+        </label>
+        <label style="font-size:0.85rem;color:var(--text-muted);margin-left:auto;">
+          缩进
+          <select id="indentSelect" style="margin-left:0.25rem;padding:0.25rem 0.5rem;border-radius:6px;border:1px solid var(--border);">
+            <option value="2" selected>2 空格</option>
+            <option value="4">4 空格</option>
+          </select>
+        </label>
+        <label style="font-size:0.85rem;color:var(--text-muted);">
+          关键字
+          <select id="keywordCaseSelect" style="margin-left:0.25rem;padding:0.25rem 0.5rem;border-radius:6px;border:1px solid var(--border);">
+            <option value="upper" selected>大写</option>
+            <option value="lower">小写</option>
+            <option value="preserve">保持原样</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="json-panels">
+        <div class="json-panel">
+          <div class="panel-header">
+            <span>输入</span>
+            <button class="btn btn-secondary btn-sm" id="clearInputBtn">清空</button>
+          </div>
+          <textarea id="inputText" class="json-textarea json-panel-body" placeholder="粘贴 SQL，例如：select id,name from users where id=1"></textarea>
+        </div>
+        <div class="json-panel">
+          <div class="panel-header">
+            <span>输出</span>
+            <div class="panel-actions">
+              <button class="btn btn-secondary btn-sm" id="copyOutputBtn">复制</button>
+            </div>
+          </div>
+          <div class="json-panel-body sql-output-body">
+            <pre id="outputPre" class="sql-highlight-output"><code id="outputCode" class="sql-highlight-code"><span class="sql-output-empty">格式化结果将显示在这里</span></code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/sql_formatter.js"></script>
+</body>
+</html>

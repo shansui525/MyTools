@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Word转Markdown - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css?v=5">
+</head>
+<body class="page-word-markdown">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>📄 Word 转 Markdown</h1>
+      <p class="subtitle">将 Word 文档转为极致压缩 Markdown，表格无多余空格，最短分隔符</p>
+      <p class="subtitle-en">Word to Markdown</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="toolbar">
+        <input type="file" id="fileInput" class="file-input-offscreen" accept=".docx">
+        <button type="button" class="btn btn-primary btn-sm" id="pickFileBtn">上传 Word</button>
+        <button type="button" class="btn btn-primary btn-sm" id="convertBtn" disabled>转换</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="copyBtn">复制结果</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="clearBtn">清空</button>
+        <label class="excel-md-option">
+          <input type="checkbox" id="ignoreImages" checked> 忽略内嵌图片
+        </label>
+        <span class="excel-md-stats" id="statsInfo"></span>
+      </div>
+
+      <div class="json-panels">
+        <div class="json-panel">
+          <div class="panel-header">
+            <span>Word 文件</span>
+          </div>
+          <div class="excel-md-file-info excel-md-upload-zone" id="fileInfoWrap">
+            <button type="button" class="excel-md-upload-trigger" id="fileZoneBtn">
+              点击此处或上方「上传 Word」选择 .docx 文件
+            </button>
+            <div class="excel-md-file-name hidden" id="fileInfoName"></div>
+          </div>
+        </div>
+        <div class="json-panel">
+          <div class="panel-header">
+            <span>Markdown 输出（压缩）</span>
+          </div>
+          <textarea id="mdOutput" class="json-textarea json-panel-body" readonly placeholder="转换结果将显示在这里"></textarea>
+        </div>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/word_markdown.js?v=1"></script>
+</body>
+</html>
