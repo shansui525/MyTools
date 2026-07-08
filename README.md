@@ -2,6 +2,8 @@
 
 多功能在线工具集合，基于 Python + FastAPI 构建，可在本地独立运行。
 
+**当前版本：v1.1.0**
+
 仓库地址：[github.com/shansui525/MyTools](https://github.com/shansui525/MyTools)
 
 ## 功能特点
@@ -124,3 +126,50 @@ MyTools/
 - **调度**：APScheduler
 - **RSS**：feedparser
 - **前端**：原生 HTML / CSS / JavaScript
+
+## 版本历史
+
+### v1.1.0（2026-07-08）
+
+**初始发布**
+
+| 分类 | 工具 |
+|------|------|
+| 对比 | Excel 文件对比、文本对比 |
+| 格式化 | JSON 格式化、SQL 格式化、Excel / Word 转 Markdown |
+| 开发 | curl 转 requests、SQLite 查询、加解密实验室、定时调度器 |
+| 日常 | 密码管理器、Markdown 转 PDF、年历 |
+
+**新增**
+
+- **RSS 订阅管理**：订阅源增删改查、内置 60 个预设数据源批量导入、并发检测可用性、SSE 流式推送状态、文章列表浏览
+- **工作记录与报告**：每日工作条目录入、大模型生成周报 / 月报 / 季报 / 年报（支持 OpenAI 兼容 API）
+
+**增强**
+
+- **SQL 格式化**：输入 / 输出行号栏；引入 sqlglot 三层语法检查（词法 → 语法解析 → 语义），替代正则枚举规则；支持标准 / Hive / Spark 方言
+- **SQLite 查询**：新建临时库或链接已有 `.db` 后导入 CSV / Excel 为临时表；表名取自文件名；结果区比例优化与全屏查看；临时库命名显示为「临时库 MM-DD HH:MM:SS #xxxx」
+- **启动脚本**：`run.sh` 默认使用 conda 环境 `spider_base`，可通过 `MYTOOLS_CONDA_ENV` 覆盖
+
+**修复**
+
+- `run.sh` 改为直接执行 `python web/main.py`，避免 uvicorn 字符串导入时 `log_config` 加载失败
+- RSS 订阅管理：状态检测 SSE 接口改为异步实现，修复打开 RSS 页时并发检测大量源阻塞 uvicorn 单 worker、导致全站其他页面无响应的问题
+
+**文档**
+
+- 补全 README：全部工具说明、项目结构、环境变量、数据隐私与版本历史
+
+**清理**
+
+- 移除未引用的 SQLite 旧实现模块（`import_tables.py`、`sessions.py`，已由 `import_store.py` 替代）
+
+**依赖**
+
+- 新增 `sqlglot>=25.0.0`
+
+**架构**
+
+- 配置驱动工具注册（`config/tools.json`）
+- FastAPI + 静态前端，业务逻辑在 `modules/`
+- 本地 `data/` 目录持久化，Git 忽略敏感与用户数据

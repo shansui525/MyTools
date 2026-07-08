@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """RSS 订阅源管理 API。"""
 
+import asyncio
 import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -41,6 +41,12 @@ def _feed_with_status(feed: dict) -> dict:
     }
 
 
+async def _feed_with_status_async(feed: dict, sem: asyncio.Semaphore) -> dict:
+    """在线程池中检测订阅源，避免阻塞事件循环。"""
+    async with sem:
+        return await asyncio.to_thread(_feed_with_status, feed)
+
+
 @router.get("/presets")
 def get_presets():
     """获取内置预设订阅源（按分类分组）。"""
@@ -64,10 +70,10 @@ def import_presets(body: ImportPresetsForm):
 
 
 @router.get("/feeds/status-stream")
-def feed_status_stream():
+async def feed_status_stream():
     """并发检测所有订阅源，通过 SSE 逐个推送结果。"""
 
-    def generate():
+    async def generate():
         feeds = list_feeds()
         total = len(feeds)
         if not total:
@@ -75,16 +81,16 @@ def feed_status_stream():
             return
 
         done = 0
-        with ThreadPoolExecutor(max_workers=_STATUS_WORKERS) as pool:
-            futures = {pool.submit(_feed_with_status, f): f for f in feeds}
-            for future in as_completed(futures):
-                result = future.result()
-                done += 1
-                payload = json.dumps(
-                    {"feed": result, "done": done, "total": total},
-                    ensure_ascii=False,
-                )
-                yield f"data: {payload}\n\n"
+        sem = asyncio.Semaphore(_STATUS_WORKERS)
+        tasks = [asyncio.create_task(_feed_with_status_async(f, sem)) for f in feeds]
+        for task in asyncio.as_completed(tasks):
+            result = await task
+            done += 1
+            payload = json.dumps(
+                {"feed": result, "done": done, "total": total},
+                ensure_ascii=False,
+            )
+            yield f"data: {payload}\n\n"
 
         yield f"data: {json.dumps({'complete': True, 'done': total, 'total': total}, ensure_ascii=False)}\n\n"
 
@@ -96,16 +102,16 @@ def feed_status_stream():
 
 
 @router.get("/feeds/{feed_id}/status")
-def feed_status(feed_id: str):
+async def feed_status(feed_id: str):
     """检测单个订阅源状态（供前端逐个刷新）。"""
     feed = get_feed(feed_id)
     if not feed:
         raise HTTPException(status_code=404, detail="订阅源不存在")
-    return _feed_with_status(feed)
+    return await _feed_with_status_async(feed, asyncio.Semaphore(1))
 
 
 @router.get("/feeds")
-def get_feeds(with_status: bool = Query(default=False, description="是否检测每个源的状态")):
+async def get_feeds(with_status: bool = Query(default=False, description="是否检测每个源的状态")):
     """列出所有订阅源。"""
     feeds = list_feeds()
     if not with_status:
@@ -120,28 +126,27 @@ def get_feeds(with_status: bool = Query(default=False, description="是否检测
                 for f in feeds
             ]
         }
-    # 多线程并行检测，加快大量订阅源时的响应速度
-    with ThreadPoolExecutor(max_workers=_STATUS_WORKERS) as pool:
-        result = list(pool.map(_feed_with_status, feeds))
-    return {"feeds": result}
+    sem = asyncio.Semaphore(_STATUS_WORKERS)
+    result = await asyncio.gather(*(_feed_with_status_async(f, sem) for f in feeds))
+    return {"feeds": list(result)}
 
 
 @router.post("/feeds")
-def create_feed(body: FeedForm):
+async def create_feed(body: FeedForm):
     """新增订阅源。"""
     try:
         feed = add_feed(body.name, body.url, body.category)
-        return _feed_with_status(feed)
+        return await _feed_with_status_async(feed, asyncio.Semaphore(1))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
 
 @router.put("/feeds/{feed_id}")
-def edit_feed(feed_id: str, body: FeedForm):
+async def edit_feed(feed_id: str, body: FeedForm):
     """修改订阅源。"""
     try:
         feed = update_feed(feed_id, body.name, body.url, body.category)
-        return _feed_with_status(feed)
+        return await _feed_with_status_async(feed, asyncio.Semaphore(1))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
