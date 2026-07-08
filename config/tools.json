@@ -69,7 +69,7 @@
       "group": "format",
       "name_zh": "SQL格式化",
       "name_en": "SQL Formatter",
-      "description": "SQL 缩进美化，关键字高亮，表名差异化展示",
+      "description": "SQL 缩进美化，支持标准/Hive/Spark 方言，关键字高亮与简单语法检查",
       "icon": "✨",
       "enabled": true,
       "route": "/tools/sql-formatter",
@@ -113,7 +113,7 @@
       "group": "dev",
       "name_zh": "SQLite查询",
       "name_en": "SQLite Browser",
-      "description": "链接本地 SQLite 文件，浏览元数据、执行 SQL 查询，自动保存执行历史",
+      "description": "链接本地 SQLite 文件，导入 CSV/Excel 为临时表，执行 SQL 查询并保存历史",
       "icon": "🗄️",
       "enabled": true,
       "route": "/tools/sqlite-browser",
@@ -173,6 +173,28 @@
       "enabled": true,
       "route": "/tools/calendar",
       "api_prefix": "/api/tools/calendar"
+    },
+    {
+      "id": "rss-manager",
+      "group": "daily",
+      "name_zh": "RSS订阅管理",
+      "name_en": "RSS Manager",
+      "description": "管理 RSS 订阅源，内置 60 个预设数据源，状态灯显示可用性，点击查看文章",
+      "icon": "📡",
+      "enabled": true,
+      "route": "/tools/rss-manager",
+      "api_prefix": "/api/tools/rss-manager"
+    },
+    {
+      "id": "work-report",
+      "group": "daily",
+      "name_zh": "工作记录与报告",
+      "name_en": "Work Report",
+      "description": "每日录入工作内容，使用大模型自动生成周报、月报、季报与年报",
+      "icon": "📝",
+      "enabled": true,
+      "route": "/tools/work-report",
+      "api_prefix": "/api/tools/work-report"
     }
   ]
 }

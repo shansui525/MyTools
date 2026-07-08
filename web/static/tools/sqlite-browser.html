@@ -11,7 +11,7 @@
     <div class="header-inner">
       <a class="back-link" href="/">&larr; 返回工具箱</a>
       <h1>🗄️ SQLite 查询</h1>
-      <p class="subtitle">链接本地 SQLite 文件，浏览元数据、执行 SQL、自动保存历史</p>
+      <p class="subtitle">链接本地 SQLite 文件，或导入 CSV/Excel 为临时表后执行 SQL 查询</p>
       <p class="subtitle-en">SQLite Browser</p>
     </div>
   </header>
@@ -23,9 +23,14 @@
           <input type="text" id="dbPathInput" class="sqlite-path-input" placeholder="本地数据库路径，如 /Users/me/data/app.db 或 ~/data/app.db">
           <button class="btn btn-primary btn-sm" id="linkDbBtn">打开</button>
         </div>
+        <button class="btn btn-secondary btn-sm" id="tempSessionBtn">新建临时库</button>
         <select id="dbSelect" class="sqlite-db-select">
           <option value="">— 选择已链接的数据库 —</option>
         </select>
+        <label class="btn btn-secondary btn-sm sqlite-import-btn" id="importLabel" title="导入 CSV/Excel 为临时表">
+          导入 CSV/Excel
+          <input type="file" id="importFileInput" accept=".csv,.xlsx,.xls" hidden disabled>
+        </label>
         <button class="btn btn-secondary btn-sm" id="refreshMetaBtn" disabled>刷新元数据</button>
         <button class="btn btn-danger btn-sm" id="removeDbBtn" disabled>移除连接</button>
         <span class="sqlite-db-info" id="dbInfo"></span>
@@ -51,10 +56,13 @@
             </div>
             <textarea id="sqlInput" class="json-textarea sqlite-sql-input" placeholder="输入 SQL，例如：SELECT * FROM users LIMIT 10;" disabled></textarea>
           </div>
-          <div class="sqlite-result-section">
+          <div class="sqlite-result-section" id="resultSection">
             <div class="panel-header">
               <span>查询结果</span>
-              <span class="sqlite-result-msg" id="resultMsg"></span>
+              <div class="panel-actions">
+                <span class="sqlite-result-msg" id="resultMsg"></span>
+                <button class="btn btn-secondary btn-sm" id="resultFullscreenBtn" title="全屏查看结果 (Esc 退出)">全屏</button>
+              </div>
             </div>
             <div class="sqlite-result-wrap" id="resultWrap">
               <div class="sqlite-result-empty">执行 SQL 后在此显示结果</div>
@@ -84,6 +92,6 @@
     <p>MyTools &copy; 2026</p>
   </footer>
 
-  <script src="/static/tools/sqlite_browser.js?v=2"></script>
+  <script src="/static/tools/sqlite_browser.js?v=5"></script>
 </body>
 </html>

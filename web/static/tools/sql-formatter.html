@@ -11,7 +11,7 @@
     <div class="header-inner">
       <a class="back-link" href="/">&larr; 返回工具箱</a>
       <h1>SQL 格式化</h1>
-      <p class="subtitle">SQL 缩进美化，关键字与表名高亮展示</p>
+      <p class="subtitle">SQL 缩进美化，支持标准 / Hive / Spark 方言，关键字高亮与简单语法检查</p>
       <p class="subtitle-en">SQL Formatter</p>
     </div>
   </header>
@@ -20,6 +20,7 @@
     <section class="card">
       <div class="toolbar">
         <button class="btn btn-primary btn-sm" id="formatBtn">格式化</button>
+        <button class="btn btn-secondary btn-sm" id="lintBtn">语法检查</button>
         <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
           上传文件
           <input type="file" id="fileInput" accept=".sql,.txt" hidden>
@@ -29,6 +30,14 @@
           <select id="indentSelect" style="margin-left:0.25rem;padding:0.25rem 0.5rem;border-radius:6px;border:1px solid var(--border);">
             <option value="2" selected>2 空格</option>
             <option value="4">4 空格</option>
+          </select>
+        </label>
+        <label style="font-size:0.85rem;color:var(--text-muted);">
+          方言
+          <select id="dialectSelect" style="margin-left:0.25rem;padding:0.25rem 0.5rem;border-radius:6px;border:1px solid var(--border);">
+            <option value="standard">标准 SQL</option>
+            <option value="hive">Hive SQL</option>
+            <option value="spark" selected>Spark SQL</option>
           </select>
         </label>
         <label style="font-size:0.85rem;color:var(--text-muted);">
@@ -47,7 +56,10 @@
             <span>输入</span>
             <button class="btn btn-secondary btn-sm" id="clearInputBtn">清空</button>
           </div>
-          <textarea id="inputText" class="json-textarea json-panel-body" placeholder="粘贴 SQL，例如：select id,name from users where id=1"></textarea>
+          <div class="line-number-editor json-panel-body">
+            <div class="line-number-gutter" id="inputLineGutter" aria-hidden="true"></div>
+            <textarea id="inputText" class="json-textarea" placeholder="粘贴 SQL，例如：select id,name from users where id=1"></textarea>
+          </div>
         </div>
         <div class="json-panel">
           <div class="panel-header">
@@ -56,10 +68,18 @@
               <button class="btn btn-secondary btn-sm" id="copyOutputBtn">复制</button>
             </div>
           </div>
-          <div class="json-panel-body sql-output-body">
+          <div class="line-number-editor json-panel-body sql-output-body">
+            <div class="line-number-gutter" id="outputLineGutter" aria-hidden="true"></div>
             <pre id="outputPre" class="sql-highlight-output"><code id="outputCode" class="sql-highlight-code"><span class="sql-output-empty">格式化结果将显示在这里</span></code></pre>
           </div>
         </div>
+      </div>
+
+      <div id="issuesPanel" class="sql-issues-panel hidden">
+        <div class="sql-issues-header">
+          <span id="issuesSummary">语法检查结果</span>
+        </div>
+        <ul id="issuesList" class="sql-issues-list"></ul>
       </div>
 
       <div class="json-message-slot">
@@ -72,6 +92,6 @@
     <p>MyTools &copy; 2026</p>
   </footer>
 
-  <script src="/static/tools/sql_formatter.js"></script>
+  <script src="/static/tools/sql_formatter.js?v=3"></script>
 </body>
 </html>

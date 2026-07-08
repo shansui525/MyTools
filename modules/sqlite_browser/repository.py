@@ -5,9 +5,11 @@ import json
 import shutil
 import sqlite3
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from modules.sqlite_browser.import_store import clear_import_db, get_import_db_size, list_imported_tables
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 UPLOAD_DIR = PROJECT_ROOT / "data" / "sqlite_uploads"
@@ -69,6 +71,9 @@ def get_db_path(db_id: str) -> Path:
     if not info:
         raise ValueError("数据库不存在")
 
+    if info.get("source_type") == "temp":
+        raise ValueError("临时库无磁盘数据库文件")
+
     if info.get("source_type") == "local":
         path = Path(info["path"]).expanduser().resolve()
         if not path.exists():
@@ -79,6 +84,81 @@ def get_db_path(db_id: str) -> Path:
     if UPLOAD_DIR.resolve() not in path.parents and path.parent != UPLOAD_DIR.resolve():
         raise ValueError("非法路径")
     return path
+
+
+def _temp_session_label(dt: Optional[datetime] = None) -> str:
+    if dt is None:
+        dt = datetime.now(timezone.utc)
+    local = dt.astimezone(timezone(timedelta(hours=8)))
+    return local.strftime("临时库 %m-%d %H:%M:%S")
+
+
+def _apply_temp_stats(info: Dict[str, Any]) -> bool:
+    db_id = info.get("db_id")
+    if not db_id:
+        return False
+
+    changed = False
+    if info.get("filename") in ("临时库（导入数据）", "临时库"):
+        linked_at = info.get("linked_at")
+        suffix = f" #{db_id[:4]}" if db_id else ""
+        if linked_at:
+            try:
+                dt = datetime.fromisoformat(linked_at.replace("Z", "+00:00"))
+                info["filename"] = _temp_session_label(dt) + suffix
+                changed = True
+            except ValueError:
+                info["filename"] = _temp_session_label() + suffix
+                changed = True
+
+    size = get_import_db_size(db_id)
+    tables = list_imported_tables(db_id)
+    table_count = len(tables)
+    summary = ""
+    if tables:
+        names = [t["name"] for t in tables[:2]]
+        summary = ", ".join(names)
+        if table_count > 2:
+            summary += f" 等{table_count}表"
+
+    changed = (
+        changed
+        or info.get("size") != size
+        or info.get("table_count") != table_count
+        or info.get("summary") != summary
+    )
+    info["size"] = size
+    info["table_count"] = table_count
+    info["summary"] = summary
+    return changed
+
+
+def refresh_temp_session_info(db_id: str) -> Optional[Dict[str, Any]]:
+    reg = _load_registry()
+    info = reg["databases"].get(db_id)
+    if not info or info.get("source_type") != "temp":
+        return info
+    if _apply_temp_stats(info):
+        reg["databases"][db_id] = info
+        _save_registry(reg)
+    return info
+
+
+def register_temp_session() -> Dict[str, Any]:
+    db_id = uuid.uuid4().hex
+    info = {
+        "db_id": db_id,
+        "filename": f"{_temp_session_label()} #{db_id[:4]}",
+        "source_type": "temp",
+        "size": 0,
+        "table_count": 0,
+        "summary": "",
+        "linked_at": _now_iso(),
+    }
+    reg = _load_registry()
+    reg["databases"][db_id] = info
+    _save_registry(reg)
+    return info
 
 
 def register_local_path(path_str: str) -> Dict[str, Any]:
@@ -129,6 +209,14 @@ def get_database(db_id: str) -> Optional[Dict[str, Any]]:
 
 def list_databases() -> List[Dict[str, Any]]:
     reg = _load_registry()
+    changed = False
+    for db_id, info in reg["databases"].items():
+        if info.get("source_type") == "temp" and _apply_temp_stats(info):
+            reg["databases"][db_id] = info
+            changed = True
+    if changed:
+        _save_registry(reg)
+
     items = list(reg["databases"].values())
     items.sort(key=lambda x: x.get("linked_at") or x.get("uploaded_at", ""), reverse=True)
     return items
@@ -145,6 +233,7 @@ def delete_database(db_id: str) -> bool:
         if path.exists():
             path.unlink()
 
+    clear_import_db(db_id)
     del reg["databases"][db_id]
     _save_registry(reg)
     return True

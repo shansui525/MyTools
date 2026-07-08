@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSS订阅管理 - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css?v=7">
+</head>
+<body class="page-rss-manager">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>📡 RSS 订阅管理</h1>
+      <p class="subtitle">管理多个 RSS 订阅源，查看状态与文章内容</p>
+      <p class="subtitle-en">RSS Manager</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card rss-card">
+      <!-- 新增/编辑表单 -->
+      <div class="rss-form-row">
+        <input type="hidden" id="editId">
+        <input type="text" id="feedName" class="rss-input" placeholder="订阅源名称">
+        <input type="url" id="feedUrl" class="rss-input rss-input-url" placeholder="RSS 地址">
+        <input type="text" id="feedCategory" class="rss-input rss-input-cat" placeholder="分类">
+        <button type="button" class="btn btn-primary btn-sm" id="saveBtn">添加</button>
+        <button type="button" class="btn btn-secondary btn-sm hidden" id="cancelBtn">取消</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="refreshBtn">刷新状态</button>
+      </div>
+
+      <!-- 预设订阅源（来自 rss_manager 项目，共 60 个） -->
+      <div class="rss-preset-row">
+        <span class="rss-preset-label">内置数据源</span>
+        <select id="presetCategory" class="rss-input rss-preset-select">
+          <option value="">全部分类</option>
+        </select>
+        <button type="button" class="btn btn-primary btn-sm" id="importPresetBtn">导入选中分类</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="importAllPresetBtn">导入全部预设</button>
+        <span class="rss-preset-info" id="presetInfo"></span>
+      </div>
+
+      <div class="rss-workspace">
+        <!-- 左侧：订阅源列表 -->
+        <aside class="rss-sidebar">
+          <div class="rss-panel-title">
+            订阅源
+            <span class="rss-status-progress hidden" id="statusProgress"></span>
+            <span class="rss-legend"><i class="rss-dot ok"></i>正常 <i class="rss-dot error"></i>异常</span>
+          </div>
+          <ul class="rss-feed-list" id="feedList">
+            <li class="rss-empty">加载中...</li>
+          </ul>
+        </aside>
+
+        <!-- 右侧：文章内容 -->
+        <div class="rss-content">
+          <div class="rss-panel-title" id="contentTitle">选择左侧订阅源查看内容</div>
+          <div class="rss-items" id="itemList">
+            <div class="rss-empty">点击订阅源名称加载文章</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="json-message-slot">
+        <div class="message" id="message"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/rss_manager.js?v=5"></script>
+</body>
+</html>

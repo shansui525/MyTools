@@ -11,7 +11,10 @@ const metaTree = document.getElementById("metaTree");
 const metaEmpty = document.getElementById("metaEmpty");
 const historyList = document.getElementById("historyList");
 const resultWrap = document.getElementById("resultWrap");
+const resultSection = document.getElementById("resultSection");
 const resultMsg = document.getElementById("resultMsg");
+const resultFullscreenBtn = document.getElementById("resultFullscreenBtn");
+const importFileInput = document.getElementById("importFileInput");
 const message = document.getElementById("message");
 
 function showMessage(text, type) {
@@ -28,7 +31,18 @@ function setConnected(connected) {
   document.getElementById("runBtn").disabled = !connected;
   document.getElementById("refreshMetaBtn").disabled = !connected;
   document.getElementById("removeDbBtn").disabled = !connected;
+  importFileInput.disabled = !connected;
   sqlInput.disabled = !connected;
+}
+
+function setResultFullscreen(on) {
+  resultSection.classList.toggle("is-fullscreen", on);
+  resultFullscreenBtn.textContent = on ? "退出全屏" : "全屏";
+  document.body.classList.toggle("sqlite-result-fullscreen-open", on);
+}
+
+function toggleResultFullscreen() {
+  setResultFullscreen(!resultSection.classList.contains("is-fullscreen"));
 }
 
 async function api(path, options = {}) {
@@ -40,6 +54,16 @@ async function api(path, options = {}) {
 
 function formatDbLabel(db) {
   const size = formatSize(db.size || 0);
+  if (db.source_type === "temp") {
+    const parts = [db.filename || "临时库", size];
+    if (db.table_count > 0) {
+      parts.push(`${db.table_count} 表`);
+    }
+    if (db.summary) {
+      parts.push(db.summary);
+    }
+    return parts.join(" · ");
+  }
   if (db.source_type === "local" && db.path) {
     return `${db.filename} · ${size}`;
   }
@@ -55,6 +79,11 @@ function updateDbInfo(dbId) {
   const db = databasesCache.find((item) => item.db_id === dbId);
   if (!db) {
     dbInfo.textContent = "";
+    return;
+  }
+  if (db.source_type === "temp") {
+    dbInfo.textContent = db.summary ? `${db.filename} · ${db.summary}` : (db.filename || "临时库");
+    dbInfo.title = dbInfo.textContent;
     return;
   }
   if (db.source_type === "local" && db.path) {
@@ -123,36 +152,70 @@ async function loadMetadata() {
   }
 }
 
+function tableQueryName(tableName, schema) {
+  if (!schema || schema === "main") {
+    return `"${tableName.replace(/"/g, '""')}"`;
+  }
+  return `"${schema.replace(/"/g, '""')}"."${tableName.replace(/"/g, '""')}"`;
+}
+
+function renderTableGroup(title, tables, meta, options = {}) {
+  const { temporary = false, schemaPrefix = "" } = options;
+  if (!tables.length) return "";
+
+  let html = `<div class="meta-group"><div class="meta-group-title">${title} (${tables.length})</div>`;
+  tables.forEach((t, idx) => {
+    const schema = meta.table_schemas[t.name] || {};
+    const cols = schema.columns || [];
+    const rowCount = schema.row_count != null ? schema.row_count : "?";
+    const qualified = schema.qualified_name || t.name;
+    const groupKey = `${schemaPrefix}${temporary ? "imp" : "tbl"}-${idx}`;
+    const tempBadge = temporary ? '<span class="meta-badge meta-badge-temp">临时</span>' : "";
+
+    html += `<div class="meta-table-item${temporary ? " meta-table-temp" : ""}">
+      <div class="meta-table-head" data-idx="${groupKey}">
+        <span class="meta-icon">${temporary ? "📥" : "📋"}</span>
+        <span class="meta-name" title="${escapeHtml(qualified)}">${escapeHtml(t.name)}</span>
+        ${tempBadge}
+        <span class="meta-badge">${rowCount} 行</span>
+      </div>
+      <div class="meta-columns hidden" id="meta-cols-${groupKey}">`;
+    cols.forEach((c) => {
+      const pk = c.pk ? " 🔑" : "";
+      const nn = c.notnull ? " NOT NULL" : "";
+      html += `<div class="meta-col" title="${escapeHtml(t.name)}.${escapeHtml(c.name)}">
+        ${escapeHtml(c.name)} <span class="meta-col-type">${escapeHtml(c.type || "TEXT")}${pk}${nn}</span>
+      </div>`;
+    });
+    html += `<button class="btn btn-secondary btn-sm meta-preview-btn" data-table="${escapeHtml(t.name)}" data-schema="${escapeHtml(schema.schema || schemaPrefix || "")}">预览数据</button>`;
+    if (temporary) {
+      html += `<button class="btn btn-danger btn-sm meta-drop-import-btn" data-table="${escapeHtml(t.name)}">删除临时表</button>`;
+    }
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
 function renderMetadata(meta) {
   metaEmpty.classList.add("hidden");
   metaTree.classList.remove("hidden");
 
   let html = "";
 
+  const db = databasesCache.find((item) => item.db_id === currentDbId);
+  const isTempDb = db && db.source_type === "temp";
+
   if (meta.tables.length) {
-    html += `<div class="meta-group"><div class="meta-group-title">表 (${meta.tables.length})</div>`;
-    meta.tables.forEach((t, idx) => {
-      const schema = meta.table_schemas[t.name] || {};
-      const cols = schema.columns || [];
-      const rowCount = schema.row_count != null ? schema.row_count : "?";
-      html += `<div class="meta-table-item">
-        <div class="meta-table-head" data-idx="${idx}">
-          <span class="meta-icon">📋</span>
-          <span class="meta-name">${escapeHtml(t.name)}</span>
-          <span class="meta-badge">${rowCount} 行</span>
-        </div>
-        <div class="meta-columns hidden" id="meta-cols-${idx}">`;
-      cols.forEach((c) => {
-        const pk = c.pk ? " 🔑" : "";
-        const nn = c.notnull ? " NOT NULL" : "";
-        html += `<div class="meta-col" title="${escapeHtml(t.name)}.${escapeHtml(c.name)}">
-          ${escapeHtml(c.name)} <span class="meta-col-type">${escapeHtml(c.type || "TEXT")}${pk}${nn}</span>
-        </div>`;
-      });
-      html += `<button class="btn btn-secondary btn-sm meta-preview-btn" data-idx="${idx}">预览数据</button>`;
-      html += `</div></div>`;
-    });
-    html += `</div>`;
+    if (isTempDb) {
+      html += renderTableGroup("导入临时表", meta.tables, meta, { temporary: true });
+    } else {
+      html += renderTableGroup("表", meta.tables, meta);
+    }
+  }
+
+  if (meta.imported_tables && meta.imported_tables.length) {
+    html += renderTableGroup("导入临时表", meta.imported_tables, meta, { temporary: true, schemaPrefix: "imported" });
   }
 
   if (meta.views.length) {
@@ -183,9 +246,26 @@ function renderMetadata(meta) {
   metaTree.querySelectorAll(".meta-preview-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const table = meta.tables[parseInt(btn.dataset.idx, 10)].name;
-      sqlInput.value = `SELECT * FROM "${table.replace(/"/g, '""')}" LIMIT 100;`;
+      const table = btn.dataset.table;
+      const schema = btn.dataset.schema;
+      sqlInput.value = `SELECT * FROM ${tableQueryName(table, schema)} LIMIT 100;`;
       runQuery();
+    });
+  });
+
+  metaTree.querySelectorAll(".meta-drop-import-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const table = btn.dataset.table;
+      if (!confirm(`确定删除临时表 ${table}？`)) return;
+      try {
+        await api(`/databases/${currentDbId}/import/${encodeURIComponent(table)}`, { method: "DELETE" });
+        await loadMetadata();
+        await loadDatabases(currentDbId);
+        showMessage(`已删除临时表 ${table}`, "success");
+      } catch (err) {
+        showMessage(err.message, "error");
+      }
     });
   });
 
@@ -304,6 +384,43 @@ async function linkDatabase() {
 
 document.getElementById("linkDbBtn").addEventListener("click", linkDatabase);
 
+document.getElementById("tempSessionBtn").addEventListener("click", async () => {
+  hideMessage();
+  try {
+    showMessage("正在创建临时库...", "info");
+    const data = await api("/temp-session", { method: "POST" });
+    await loadDatabases(data.db_id);
+    await selectDatabase(data.db_id);
+    showMessage("已创建临时库，可导入 CSV/Excel 后查询", "success");
+  } catch (err) {
+    showMessage(err.message, "error");
+  }
+});
+
+importFileInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file || !currentDbId) return;
+
+  hideMessage();
+  const form = new FormData();
+  form.append("file", file);
+
+  try {
+    showMessage(`正在导入 ${file.name}...`, "info");
+    const data = await api(`/databases/${currentDbId}/import`, {
+      method: "POST",
+      body: form,
+    });
+    await loadDatabases(currentDbId);
+    await loadMetadata();
+    sqlInput.value = `SELECT * FROM ${tableQueryName(data.table_name, data.schema)} LIMIT 100;`;
+    showMessage(data.message, "success");
+  } catch (err) {
+    showMessage(err.message, "error");
+  }
+});
+
 dbPathInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -319,8 +436,10 @@ document.getElementById("removeDbBtn").addEventListener("click", async () => {
   if (!currentDbId) return;
   const db = databasesCache.find((item) => item.db_id === currentDbId);
   const isLocal = db && db.source_type === "local";
-  const tip = isLocal
-    ? "确定移除此本地数据库连接？不会删除磁盘上的文件。"
+  const tip = db && db.source_type === "temp"
+    ? "确定移除此临时库？导入的数据将被删除。"
+    : isLocal
+    ? "确定移除此本地数据库连接？不会删除磁盘上的文件，但会清除已导入的临时表。"
     : "确定删除此数据库副本？";
   if (!confirm(tip)) return;
   try {
@@ -338,12 +457,12 @@ document.getElementById("removeDbBtn").addEventListener("click", async () => {
 
 document.getElementById("runBtn").addEventListener("click", runQuery);
 document.getElementById("clearSqlBtn").addEventListener("click", () => { sqlInput.value = ""; });
+resultFullscreenBtn.addEventListener("click", toggleResultFullscreen);
 
-document.getElementById("clearHistoryBtn").addEventListener("click", async () => {
-  if (!confirm("确定清除历史记录？")) return;
-  const q = currentDbId ? `?db_id=${currentDbId}` : "";
-  await api(`/history${q}`, { method: "DELETE" });
-  await loadHistory();
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && resultSection.classList.contains("is-fullscreen")) {
+    setResultFullscreen(false);
+  }
 });
 
 sqlInput.addEventListener("keydown", (e) => {
@@ -351,6 +470,13 @@ sqlInput.addEventListener("keydown", (e) => {
     e.preventDefault();
     runQuery();
   }
+});
+
+document.getElementById("clearHistoryBtn").addEventListener("click", async () => {
+  if (!confirm("确定清除历史记录？")) return;
+  const q = currentDbId ? `?db_id=${currentDbId}` : "";
+  await api(`/history${q}`, { method: "DELETE" });
+  await loadHistory();
 });
 
 loadDatabases().then(() => loadHistory());

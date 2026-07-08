@@ -25,7 +25,7 @@ from fastapi.staticfiles import StaticFiles
 from modules.registry import get_app_info, get_tool_by_id
 from modules.task_scheduler.engine import start_scheduler, stop_scheduler
 from web.config import HOST, PORT
-from web.routers import excel_compare_api, excel_markdown_api, json_formatter_api, password_manager_api, text_diff_api, curl_converter_api, markdown_pdf_api, sqlite_browser_api, sql_formatter_api, calendar_api, crypto_lab_api, task_scheduler_api, tools_api, word_markdown_api
+from web.routers import excel_compare_api, excel_markdown_api, json_formatter_api, password_manager_api, text_diff_api, curl_converter_api, markdown_pdf_api, sqlite_browser_api, sql_formatter_api, calendar_api, crypto_lab_api, task_scheduler_api, tools_api, word_markdown_api, rss_manager_api, work_report_api
 
 
 @asynccontextmanager
@@ -68,6 +68,8 @@ app.include_router(sql_formatter_api.router)
 app.include_router(calendar_api.router)
 app.include_router(crypto_lab_api.router)
 app.include_router(task_scheduler_api.router)
+app.include_router(rss_manager_api.router)
+app.include_router(work_report_api.router)
 
 
 @app.get("/")

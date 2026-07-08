@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工作记录与报告 - MyTools</title>
+  <link rel="stylesheet" href="/static/style.css?v=8">
+</head>
+<body class="page-work-report">
+  <header>
+    <div class="header-inner">
+      <a class="back-link" href="/">&larr; 返回工具箱</a>
+      <h1>📝 工作记录与报告</h1>
+      <p class="subtitle">每日记录工作内容，一键生成周报 / 月报 / 季报 / 年报</p>
+      <p class="subtitle-en">Work Report</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card wr-card">
+      <div class="wr-workspace">
+        <aside class="wr-sidebar">
+          <div class="wr-month-nav">
+            <button type="button" class="wr-nav-btn" id="prevMonthBtn" title="上个月">&lsaquo;</button>
+            <span id="monthLabel" class="wr-month-label"></span>
+            <button type="button" class="wr-nav-btn" id="nextMonthBtn" title="下个月">&rsaquo;</button>
+          </div>
+          <div id="miniCalendar" class="wr-calendar"></div>
+          <div class="wr-panel-title">最近记录</div>
+          <ul id="recentList" class="wr-recent-list"></ul>
+        </aside>
+
+        <div class="wr-main">
+          <div class="wr-tabs">
+            <button type="button" class="wr-tab active" data-tab="entry">每日记录</button>
+            <button type="button" class="wr-tab" data-tab="report">报告生成</button>
+            <button type="button" class="wr-tab" data-tab="settings">大模型设置</button>
+          </div>
+
+          <div id="tabEntry" class="wr-tab-panel">
+            <div class="wr-entry-toolbar">
+              <input type="date" id="entryDate" class="wr-input">
+              <button type="button" class="btn btn-secondary btn-sm" id="todayBtn">今天</button>
+              <button type="button" class="btn btn-primary btn-sm" id="saveEntryBtn">保存</button>
+              <button type="button" class="btn btn-danger btn-sm" id="deleteEntryBtn">删除</button>
+              <span id="entryMeta" class="wr-entry-meta"></span>
+            </div>
+            <textarea id="entryContent" class="wr-textarea" placeholder="记录今日工作内容，支持分条列出完成事项、进展与问题…"></textarea>
+          </div>
+
+          <div id="tabReport" class="wr-tab-panel hidden">
+            <div class="wr-report-toolbar">
+              <select id="reportPeriod" class="wr-input wr-select">
+                <option value="week">周报</option>
+                <option value="month">月报</option>
+                <option value="quarter">季报</option>
+                <option value="year">年报</option>
+              </select>
+              <input type="date" id="reportDate" class="wr-input">
+              <button type="button" class="btn btn-primary btn-sm" id="generateBtn">生成报告</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="copyReportBtn">复制</button>
+            </div>
+            <div id="reportRangeInfo" class="wr-report-info">选择报告类型与参考日期</div>
+            <div id="reportOutput" class="wr-report-output">生成的报告将显示在这里</div>
+          </div>
+
+          <div id="tabSettings" class="wr-tab-panel hidden">
+            <div class="wr-settings-form">
+              <label class="wr-label">API Base URL</label>
+              <input type="url" id="llmApiBase" class="wr-input wr-input-full" placeholder="https://api.openai.com/v1">
+              <p class="wr-hint">兼容 OpenAI Chat Completions 格式的接口地址</p>
+
+              <label class="wr-label">API Key</label>
+              <input type="password" id="llmApiKey" class="wr-input wr-input-full" placeholder="sk-..." autocomplete="off">
+              <p class="wr-hint" id="keyHint">也可通过环境变量 MYTOOLS_LLM_API_KEY 配置</p>
+
+              <label class="wr-label">模型名称</label>
+              <input type="text" id="llmModel" class="wr-input wr-input-full" placeholder="gpt-4o-mini">
+
+              <div class="wr-settings-actions">
+                <button type="button" class="btn btn-primary btn-sm" id="saveSettingsBtn">保存设置</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="testSettingsBtn">测试连接</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="json-message-slot">
+            <div class="message" id="message"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer-compact">
+    <p>MyTools &copy; 2026</p>
+  </footer>
+
+  <script src="/static/tools/work_report.js?v=1"></script>
+</body>
+</html>

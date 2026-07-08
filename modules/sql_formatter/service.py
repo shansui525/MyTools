@@ -9,7 +9,8 @@ import sqlparse.engine.grouping as sqlparse_grouping
 from sqlparse import tokens as T
 from sqlparse.sql import Identifier, Statement
 
-from modules.sql_formatter.keywords import KEYWORD_PATTERN, is_sql_keyword
+from modules.sql_formatter.dialects import SqlDialect, get_keyword_pattern, is_dialect_keyword, normalize_dialect
+from modules.sql_formatter.linter import lint_sql
 
 KeywordCase = Literal["upper", "lower", "preserve"]
 
@@ -45,11 +46,13 @@ def format_sql(
     text: str,
     indent: int = 2,
     keyword_case: KeywordCase = "upper",
+    dialect: SqlDialect = "standard",
 ) -> str:
     raw = text.strip()
     if not raw:
         raise SqlFormatError("请输入 SQL 内容")
 
+    normalize_dialect(dialect)
     case_opt = None if keyword_case == "preserve" else keyword_case
     formatted = sqlparse.format(
         raw,
@@ -89,17 +92,17 @@ def _keyword_upper(token) -> str:
     return str(token).upper()
 
 
-def _name_segment_type(name: str, token, *, as_table: bool) -> str:
-    if as_table and not is_sql_keyword(name):
+def _name_segment_type(name: str, token, *, as_table: bool, dialect: SqlDialect) -> str:
+    if as_table and not is_dialect_keyword(name, dialect):
         return "table"
-    if is_sql_keyword(name):
+    if is_dialect_keyword(name, dialect):
         return "keyword"
     if token.ttype in T.Name.Builtin:
         return "keyword"
     return "identifier"
 
 
-def _emit_leaf(token, segments: list[dict]) -> None:
+def _emit_leaf(token, segments: list[dict], dialect: SqlDialect) -> None:
     value = str(token)
     ttype = token.ttype
 
@@ -118,21 +121,21 @@ def _emit_leaf(token, segments: list[dict]) -> None:
     elif _is_keyword(token):
         segments.append({"type": "keyword", "value": value})
     elif ttype in T.Name or (ttype and ttype.parent is T.Name):
-        seg_type = _name_segment_type(value, token, as_table=False)
+        seg_type = _name_segment_type(value, token, as_table=False, dialect=dialect)
         segments.append({"type": seg_type, "value": value})
     else:
         segments.append({"type": "text", "value": value})
 
 
-def _emit_identifier(identifier: Identifier, segments: list[dict], *, as_table: bool) -> None:
+def _emit_identifier(identifier: Identifier, segments: list[dict], *, as_table: bool, dialect: SqlDialect) -> None:
     alias = identifier.get_alias()
 
     for token in identifier.tokens:
         if isinstance(token, Identifier):
             if alias and str(token).strip() == alias:
-                _emit_identifier(token, segments, as_table=False)
+                _emit_identifier(token, segments, as_table=False, dialect=dialect)
             else:
-                _emit_identifier(token, segments, as_table=as_table)
+                _emit_identifier(token, segments, as_table=as_table, dialect=dialect)
             continue
 
         if token.is_whitespace:
@@ -141,19 +144,19 @@ def _emit_identifier(identifier: Identifier, segments: list[dict], *, as_table: 
 
         if token.ttype in T.Name or (token.ttype and token.ttype.parent is T.Name):
             name = str(token)
-            if as_table and not is_sql_keyword(name):
+            if as_table and not is_dialect_keyword(name, dialect):
                 segments.append({"type": "table", "value": name})
             elif not as_table and alias and name == alias:
                 segments.append({"type": "identifier", "value": name})
             else:
-                seg_type = _name_segment_type(name, token, as_table=as_table)
+                seg_type = _name_segment_type(name, token, as_table=as_table, dialect=dialect)
                 segments.append({"type": seg_type, "value": name})
             continue
 
-        _emit_leaf(token, segments)
+        _emit_leaf(token, segments, dialect)
 
 
-def _emit_table_identifier(identifier: Identifier, segments: list[dict]) -> None:
+def _emit_table_identifier(identifier: Identifier, segments: list[dict], dialect: SqlDialect) -> None:
     parent = identifier.get_parent_name()
     real = identifier.get_real_name()
     alias = identifier.get_alias()
@@ -161,9 +164,9 @@ def _emit_table_identifier(identifier: Identifier, segments: list[dict]) -> None
     for token in identifier.tokens:
         if isinstance(token, Identifier):
             if alias and str(token).strip() == alias:
-                _emit_identifier(token, segments, as_table=False)
+                _emit_identifier(token, segments, as_table=False, dialect=dialect)
             else:
-                _emit_table_identifier(token, segments)
+                _emit_table_identifier(token, segments, dialect)
             continue
 
         if token.is_whitespace:
@@ -172,7 +175,7 @@ def _emit_table_identifier(identifier: Identifier, segments: list[dict]) -> None
 
         if token.ttype in T.Name or (token.ttype and token.ttype.parent is T.Name):
             name = str(token)
-            if is_sql_keyword(name):
+            if is_dialect_keyword(name, dialect):
                 segments.append({"type": "keyword", "value": name})
             elif name in {real, parent} or (parent is None and name == real):
                 segments.append({"type": "table", "value": name})
@@ -181,23 +184,23 @@ def _emit_table_identifier(identifier: Identifier, segments: list[dict]) -> None
             else:
                 segments.append({"type": "table", "value": name})
         else:
-            _emit_leaf(token, segments)
+            _emit_leaf(token, segments, dialect)
 
 
-def _walk_statement(statement: Statement, segments: list[dict]) -> None:
+def _walk_statement(statement: Statement, segments: list[dict], dialect: SqlDialect) -> None:
     expect_table = False
 
     for token in statement.tokens:
         if isinstance(token, Identifier):
             if expect_table:
-                _emit_table_identifier(token, segments)
+                _emit_table_identifier(token, segments, dialect)
                 expect_table = False
             else:
-                _emit_identifier(token, segments, as_table=False)
+                _emit_identifier(token, segments, as_table=False, dialect=dialect)
             continue
 
         if token.is_group and not isinstance(token, Identifier):
-            _walk_statement(token, segments)
+            _walk_statement(token, segments, dialect)
             continue
 
         if _is_keyword(token):
@@ -210,13 +213,13 @@ def _walk_statement(statement: Statement, segments: list[dict]) -> None:
                 expect_table = False
             continue
 
-        _emit_leaf(token, segments)
+        _emit_leaf(token, segments, dialect)
         if token.ttype and token.ttype not in T.Text.Whitespace:
             if not (token.ttype in T.Punctuation and str(token) == "."):
                 expect_table = False
 
 
-def _tokenize_plain_text(text: str) -> list[dict]:
+def _tokenize_plain_text(text: str, dialect: SqlDialect) -> list[dict]:
     """对纯文本块做关键字/注释/字符串/表名等高亮分词。"""
     segments: list[dict] = []
     pos = 0
@@ -271,7 +274,7 @@ def _tokenize_plain_text(text: str) -> list[dict]:
             pos += len(number.group(0))
             continue
 
-        kw = _match_at(KEYWORD_PATTERN, text, pos)
+        kw = _match_at(get_keyword_pattern(dialect), text, pos)
         if kw:
             segments.append({"type": "keyword", "value": kw.group(0)})
             pos += len(kw.group(0))
@@ -283,41 +286,51 @@ def _tokenize_plain_text(text: str) -> list[dict]:
     return segments
 
 
-def _enhance_segments(segments: list[dict]) -> list[dict]:
+def _enhance_segments(segments: list[dict], dialect: SqlDialect) -> list[dict]:
     """对 sqlparse 未细分的 text 块补充关键字高亮。"""
     enhanced: list[dict] = []
     for seg in segments:
         if seg["type"] == "text" and seg["value"]:
-            enhanced.extend(_tokenize_plain_text(seg["value"]))
+            enhanced.extend(_tokenize_plain_text(seg["value"], dialect))
         else:
             enhanced.append(seg)
     return enhanced
 
 
-def _highlight_fallback(text: str) -> list[dict]:
+def _highlight_fallback(text: str, dialect: SqlDialect) -> list[dict]:
     """sqlparse 解析失败时的正则高亮兜底。"""
-    return _tokenize_plain_text(text)
+    return _tokenize_plain_text(text, dialect)
 
 
-def highlight_sql(text: str) -> list[dict]:
+def highlight_sql(text: str, dialect: SqlDialect = "standard") -> list[dict]:
+    d = normalize_dialect(dialect)
     try:
         segments: list[dict] = []
         for statement in _parse_statements(text):
-            _walk_statement(statement, segments)
+            _walk_statement(statement, segments, d)
         if segments:
-            return _enhance_segments(segments)
+            return _enhance_segments(segments, d)
     except Exception:
         pass
-    return _highlight_fallback(text)
+    return _highlight_fallback(text, d)
 
 
 def process_sql(
     text: str,
     indent: int = 2,
     keyword_case: KeywordCase = "preserve",
+    dialect: SqlDialect = "standard",
 ) -> dict:
-    formatted = format_sql(text, indent=indent, keyword_case=keyword_case)
+    d = normalize_dialect(dialect)
+    formatted = format_sql(text, indent=indent, keyword_case=keyword_case, dialect=d)
+    issues = lint_sql(formatted, d)
     return {
         "result": formatted,
-        "segments": highlight_sql(formatted),
+        "segments": highlight_sql(formatted, d),
+        "dialect": d,
+        "issues": issues,
+        "issue_summary": {
+            "errors": sum(1 for item in issues if item["level"] == "error"),
+            "warnings": sum(1 for item in issues if item["level"] == "warning"),
+        },
     }
