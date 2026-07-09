@@ -54,8 +54,9 @@ def _render_segments(segments: Optional[List[Dict]], fallback: str) -> str:
     return _escape(fallback)
 
 
-def _render_line(line: Dict, index: int) -> str:
-    line_no = index + 1
+def _render_line(line: Dict, index: int, side: str = "a") -> str:
+    src_key = "line_a" if side == "a" else "line_b"
+    line_no = line.get(src_key) or "·"
     line_type = line.get("type", "equal")
     type_class = "line-empty" if line_type == "empty" else f"line-{line_type}"
     if line_type == "empty":
@@ -70,8 +71,8 @@ def _render_line(line: Dict, index: int) -> str:
     )
 
 
-def _render_panel(title: str, lines: List[Dict]) -> str:
-    body = "".join(_render_line(line, i) for i, line in enumerate(lines))
+def _render_panel(title: str, lines: List[Dict], side: str) -> str:
+    body = "".join(_render_line(line, i, side) for i, line in enumerate(lines))
     return f'<div class="panel"><div class="panel-hd">{_escape(title)}</div><div class="panel-bd">{body}</div></div>'
 
 
@@ -81,11 +82,11 @@ def export_html(text_a: str, text_b: str, title_a: str = "文本 A", title_b: st
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     summary = (
         f"共 {result['total_lines']} 行 · 相同 {stats['equal']} · "
-        f"删除 {stats['deleted']} · 新增 {stats['inserted']} · 修改 {stats['replaced']}"
+        f"差异 {result.get('change_count', 0)} 处（删除 {stats['deleted']} · 新增 {stats['inserted']} · 修改 {stats['replaced']}）"
     )
 
-    left_panel = _render_panel(title_a, result["left"])
-    right_panel = _render_panel(title_b, result["right"])
+    left_panel = _render_panel(title_a, result["left"], "a")
+    right_panel = _render_panel(title_b, result["right"], "b")
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">

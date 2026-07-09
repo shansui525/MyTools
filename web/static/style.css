@@ -1169,6 +1169,81 @@ label.btn.is-disabled {
 .diff-char-insert { background: #4ade80; border-radius: 2px; }
 .diff-char-replace { background: #fbbf24; border-radius: 2px; }
 
+.diff-line-active .diff-content {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.diff-summary-panel {
+  flex-shrink: 0;
+  margin-top: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.diff-summary-panel.hidden {
+  display: none;
+}
+
+.diff-summary-header {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #f9fafb;
+}
+
+.diff-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem 0;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.diff-summary-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+}
+
+.diff-summary-type {
+  font-weight: 600;
+  min-width: 2.5rem;
+}
+
+.diff-change-delete .diff-summary-type { color: #dc2626; }
+.diff-change-insert .diff-summary-type { color: #16a34a; }
+.diff-change-replace .diff-summary-type { color: #d97706; }
+
+.diff-summary-pos {
+  color: var(--primary, #2563eb);
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  min-width: 5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.diff-summary-pos:hover,
+.diff-summary-pos.active {
+  color: #1d4ed8;
+}
+
+.diff-summary-preview {
+  flex: 1;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .diff-panels,
   .diff-result-panels {
@@ -1935,9 +2010,25 @@ body.sqlite-result-fullscreen-open .json-message-slot {
 .sql-issue-warning .sql-issue-level { color: #d97706; }
 
 .sql-issue-pos {
-  color: var(--text-muted);
+  color: var(--primary, #2563eb);
   font-family: "SF Mono", Menlo, Consolas, monospace;
   min-width: 4.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sql-issue-pos:hover {
+  color: #1d4ed8;
+}
+
+.line-number-gutter span.line-flash {
+  background: #fef08a;
+  color: #854d0e;
+  border-radius: 3px;
 }
 
 .sql-issue-msg {
@@ -3641,6 +3732,82 @@ body.sqlite-result-fullscreen-open .json-message-slot {
   background: #fff;
 }
 
+.wr-report-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 0.75rem;
+  flex: 1;
+  min-height: 320px;
+}
+
+.wr-report-sidebar {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wr-saved-report-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.wr-saved-report-item {
+  margin-bottom: 0.35rem;
+}
+
+.wr-saved-report-btn {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+}
+
+.wr-saved-report-btn:hover {
+  border-color: var(--border);
+}
+
+.wr-saved-report-btn.active {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+
+.wr-saved-report-title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.wr-saved-report-meta {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.wr-report-editor {
+  min-height: 320px;
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.wr-report-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
+
 .wr-settings-form {
   display: flex;
   flex-direction: column;
@@ -3680,6 +3847,10 @@ body.sqlite-result-fullscreen-open .json-message-slot {
   .wr-sidebar {
     border-right: none;
     border-bottom: 1px solid var(--border);
+  }
+
+  .wr-report-layout {
+    grid-template-columns: 1fr;
   }
 }
 

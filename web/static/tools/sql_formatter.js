@@ -101,6 +101,35 @@ function getRequestBody() {
   };
 }
 
+function jumpToInputLine(line, column) {
+  const text = inputText.value;
+  const lines = text.split("\n");
+  const lineNum = Math.max(1, Math.min(line, lines.length));
+  let pos = 0;
+  for (let i = 0; i < lineNum - 1; i += 1) {
+    pos += lines[i].length + 1;
+  }
+  const col = Math.max(1, column || 1);
+  pos += Math.min(col - 1, lines[lineNum - 1].length);
+
+  inputText.focus();
+  inputText.setSelectionRange(pos, pos);
+
+  const style = getComputedStyle(inputText);
+  const lineHeight = parseFloat(style.lineHeight) || 20;
+  inputText.scrollTop = Math.max(0, (lineNum - 1) * lineHeight - inputText.clientHeight / 2);
+  syncGutterScroll(inputText, inputLineGutter);
+  flashInputLine(lineNum);
+}
+
+function flashInputLine(lineNum) {
+  const spans = inputLineGutter.querySelectorAll("span");
+  const target = spans[lineNum - 1];
+  if (!target) return;
+  target.classList.add("line-flash");
+  window.setTimeout(() => target.classList.remove("line-flash"), 1500);
+}
+
 function renderIssues(data) {
   const issues = data.issues || [];
   const summary = data.issue_summary || { errors: 0, warnings: 0 };
@@ -112,14 +141,16 @@ function renderIssues(data) {
   }
 
   issuesPanel.classList.remove("hidden");
-  issuesSummary.textContent = `语法检查：${summary.errors} 个错误，${summary.warnings} 个警告`;
+  issuesSummary.textContent = `语法检查：${summary.errors} 个错误，${summary.warnings} 个警告（点击行号可跳转）`;
 
   issuesList.innerHTML = issues
     .map((item) => {
       const levelClass = item.level === "error" ? "sql-issue-error" : "sql-issue-warning";
       return `<li class="sql-issue-item ${levelClass}">
         <span class="sql-issue-level">${item.level === "error" ? "错误" : "警告"}</span>
-        <span class="sql-issue-pos">L${item.line}:C${item.column}</span>
+        <button type="button" class="sql-issue-pos" data-line="${item.line}" data-column="${item.column}" title="跳转到输入区第 ${item.line} 行">
+          L${item.line}:C${item.column}
+        </button>
         <span class="sql-issue-msg">${escapeHtml(item.message)}</span>
       </li>`;
     })
@@ -202,6 +233,12 @@ async function lintSql() {
 
 document.getElementById("formatBtn").addEventListener("click", formatSql);
 document.getElementById("lintBtn").addEventListener("click", lintSql);
+
+issuesList.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sql-issue-pos");
+  if (!btn) return;
+  jumpToInputLine(parseInt(btn.dataset.line, 10), parseInt(btn.dataset.column, 10));
+});
 
 document.getElementById("clearInputBtn").addEventListener("click", () => {
   inputText.value = "";

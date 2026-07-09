@@ -9,12 +9,16 @@ from pydantic import BaseModel, Field
 
 from modules.work_report.repository import (
     delete_entry,
+    delete_report,
     get_entry,
+    get_report,
     get_settings_public,
     list_entries,
     list_entry_dates,
+    list_reports,
     update_settings,
     upsert_entry,
+    upsert_report,
 )
 from modules.work_report.service import generate_report, get_period_range, test_llm_connection
 
@@ -34,6 +38,22 @@ class SettingsForm(BaseModel):
 class ReportForm(BaseModel):
     period: str = Field(description="week / month / quarter / year")
     reference_date: str = Field(description="参考日期 YYYY-MM-DD")
+
+
+class ReportSaveForm(BaseModel):
+    period: str = Field(description="week / month / quarter / year")
+    reference_date: str = Field(description="参考日期 YYYY-MM-DD")
+    title: str = Field(min_length=1, description="报告标题")
+    start_date: str = Field(description="起始日期 YYYY-MM-DD")
+    end_date: str = Field(description="结束日期 YYYY-MM-DD")
+    content: str = Field(min_length=1, description="报告正文（Markdown）")
+    entry_count: int = Field(default=0, ge=0, description="关联工作记录天数")
+    report_id: Optional[str] = Field(default=None, description="已有报告 ID，留空则按周期匹配或新建")
+
+
+class ReportUpdateForm(BaseModel):
+    content: str = Field(min_length=1, description="报告正文（Markdown）")
+    title: Optional[str] = Field(default=None, description="可选更新标题")
 
 
 @router.get("/entries")
@@ -119,3 +139,62 @@ def create_report(body: ReportForm):
         return generate_report(body.period, ref)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/reports")
+def get_reports():
+    return {"reports": list_reports()}
+
+
+@router.get("/reports/{report_id}")
+def read_report(report_id: str):
+    report = get_report(report_id)
+    if not report:
+        raise HTTPException(status_code=404, detail="报告不存在")
+    return {"report": report}
+
+
+@router.post("/reports")
+def save_report(body: ReportSaveForm):
+    try:
+        report = upsert_report(
+            period=body.period,
+            reference_date=body.reference_date,
+            title=body.title.strip(),
+            start_date=body.start_date,
+            end_date=body.end_date,
+            content=body.content,
+            entry_count=body.entry_count,
+            report_id=body.report_id,
+        )
+        return {"report": report}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.put("/reports/{report_id}")
+def update_report(report_id: str, body: ReportUpdateForm):
+    existing = get_report(report_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="报告不存在")
+    try:
+        report = upsert_report(
+            period=existing["period"],
+            reference_date=existing["reference_date"],
+            title=(body.title or existing["title"]).strip(),
+            start_date=existing["start_date"],
+            end_date=existing["end_date"],
+            content=body.content,
+            entry_count=existing.get("entry_count", 0),
+            report_id=report_id,
+        )
+        return {"report": report}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.delete("/reports/{report_id}")
+def remove_report(report_id: str):
+    if not delete_report(report_id):
+        raise HTTPException(status_code=404, detail="报告不存在")
+    return {"message": "已删除"}

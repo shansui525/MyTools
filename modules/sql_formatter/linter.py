@@ -285,16 +285,24 @@ def _check_function_arity(statements: List[exp.Expression]) -> List[Issue]:
     return issues
 
 
+def _table_in_sources(table: str, sources: Dict[str, Any]) -> bool:
+    """表/别名是否在当前作用域中（忽略大小写）。"""
+    if table in sources:
+        return True
+    table_key = table.lower()
+    return any(alias.lower() == table_key for alias in sources)
+
+
 def _check_unresolved_references(statements: List[exp.Expression]) -> List[Issue]:
     """语义层：基于 scope 分析检查无法解析的表别名/限定符。"""
     issues: List[Issue] = []
 
     for stmt in statements:
         for scope in traverse_scope(stmt):
-            sources = set(scope.sources.keys())
+            sources = scope.sources
             for column in scope.columns:
                 table = column.table
-                if not table or table in sources:
+                if not table or _table_in_sources(table, sources):
                     continue
                 line, col = _meta_line_col(column)
                 member = column.name or column.sql()

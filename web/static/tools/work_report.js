@@ -10,14 +10,18 @@ const reportPeriod = document.getElementById("reportPeriod");
 const reportDate = document.getElementById("reportDate");
 const reportRangeInfo = document.getElementById("reportRangeInfo");
 const reportOutput = document.getElementById("reportOutput");
+const reportMeta = document.getElementById("reportMeta");
+const savedReportList = document.getElementById("savedReportList");
 const message = document.getElementById("message");
 
 let entryDates = new Set();
 let viewYear = new Date().getFullYear();
 let viewMonth = new Date().getMonth();
-let lastReport = "";
+let currentReport = null;
+let savedReportsCache = [];
 
 const WEEKDAYS = ["一", "二", "三", "四", "五", "六", "日"];
+const PERIOD_LABELS = { week: "周报", month: "月报", quarter: "季报", year: "年报" };
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -53,7 +57,10 @@ function switchTab(name) {
   document.getElementById("tabEntry").classList.toggle("hidden", name !== "entry");
   document.getElementById("tabReport").classList.toggle("hidden", name !== "report");
   document.getElementById("tabSettings").classList.toggle("hidden", name !== "settings");
-  if (name === "report") updateReportRangeInfo();
+  if (name === "report") {
+    updateReportRangeInfo();
+    loadSavedReports();
+  }
 }
 
 function renderMiniCalendar() {
@@ -105,6 +112,64 @@ function renderRecentList(entries) {
       </button>`;
     li.querySelector(".wr-recent-btn").addEventListener("click", () => selectDate(item.date));
     recentList.appendChild(li);
+  });
+}
+
+function updateReportMeta() {
+  if (!currentReport?.id) {
+    reportMeta.textContent = currentReport?.content
+      ? "当前为未保存的生成内容，编辑后请点击「保存报告」"
+      : "";
+    return;
+  }
+  reportMeta.textContent = `已保存 · 最后更新：${currentReport.updated_at || "—"}`;
+}
+
+function setCurrentReport(report) {
+  currentReport = report
+    ? {
+        id: report.id || null,
+        period: report.period,
+        reference_date: report.reference_date,
+        title: report.title,
+        start_date: report.start_date,
+        end_date: report.end_date,
+        entry_count: report.entry_count ?? 0,
+        content: report.content || "",
+        updated_at: report.updated_at || "",
+      }
+    : null;
+
+  if (currentReport) {
+    reportPeriod.value = currentReport.period;
+    reportDate.value = currentReport.reference_date;
+    reportOutput.value = currentReport.content;
+    reportRangeInfo.textContent = `${currentReport.title} · ${currentReport.start_date} 至 ${currentReport.end_date}`;
+  }
+  updateReportMeta();
+  renderSavedReportList();
+}
+
+function renderSavedReportList() {
+  if (!savedReportsCache.length) {
+    savedReportList.innerHTML = '<li class="wr-empty">暂无已保存报告</li>';
+    return;
+  }
+
+  savedReportList.innerHTML = "";
+  savedReportsCache.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "wr-saved-report-item";
+    const active = currentReport?.id === item.id;
+    li.innerHTML = `
+      <button type="button" class="wr-saved-report-btn${active ? " active" : ""}" data-id="${item.id}">
+        <span class="wr-saved-report-title">${escapeHtml(item.title)}</span>
+        <span class="wr-saved-report-meta">${PERIOD_LABELS[item.period] || item.period} · ${item.updated_at || ""}</span>
+      </button>`;
+    li.querySelector(".wr-saved-report-btn").addEventListener("click", () => {
+      openSavedReport(item.id).catch((e) => showMessage(e.message, "error"));
+    });
+    savedReportList.appendChild(li);
   });
 }
 
@@ -171,16 +236,33 @@ async function updateReportRangeInfo() {
   try {
     const q = `?period=${reportPeriod.value}&reference_date=${reportDate.value}`;
     const data = await api(`/period-range${q}`);
-    reportRangeInfo.textContent = `${data.title} · ${data.start_date} 至 ${data.end_date} · 共 ${data.entry_count} 天有记录`;
+    if (!currentReport || currentReport.reference_date !== reportDate.value || currentReport.period !== reportPeriod.value) {
+      reportRangeInfo.textContent = `${data.title} · ${data.start_date} 至 ${data.end_date} · 共 ${data.entry_count} 天有记录`;
+    }
+    return data;
   } catch (err) {
     reportRangeInfo.textContent = err.message;
+    return null;
   }
+}
+
+async function loadSavedReports() {
+  const data = await api("/reports");
+  savedReportsCache = data.reports || [];
+  renderSavedReportList();
+}
+
+async function openSavedReport(reportId) {
+  const data = await api(`/reports/${reportId}`);
+  setCurrentReport(data.report);
+  showMessage("已加载保存的报告", "success");
 }
 
 async function generateReport() {
   hideMessage();
   generateBtn.disabled = true;
-  reportOutput.textContent = "正在生成报告，请稍候…";
+  reportOutput.value = "正在生成报告，请稍候…";
+  reportOutput.disabled = true;
   try {
     const data = await api("/reports/generate", {
       method: "POST",
@@ -190,16 +272,87 @@ async function generateReport() {
         reference_date: reportDate.value,
       }),
     });
-    lastReport = data.report;
-    reportOutput.textContent = data.report;
+    setCurrentReport({
+      id: null,
+      period: data.period,
+      reference_date: reportDate.value,
+      title: data.title,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      entry_count: data.entry_count,
+      content: data.report,
+    });
     reportRangeInfo.textContent = `${data.title} · ${data.start_date} 至 ${data.end_date} · 共 ${data.entry_count} 天有记录`;
-    showMessage("报告已生成", "success");
+    showMessage("报告已生成，可编辑后保存", "success");
   } catch (err) {
-    reportOutput.textContent = "生成失败";
+    reportOutput.value = "";
+    setCurrentReport(null);
     showMessage(err.message, "error");
   } finally {
+    reportOutput.disabled = false;
     generateBtn.disabled = false;
   }
+}
+
+async function saveReport() {
+  hideMessage();
+  const content = reportOutput.value.trim();
+  if (!content) {
+    showMessage("报告内容为空，无法保存", "error");
+    return;
+  }
+
+  const range = await updateReportRangeInfo();
+  if (!range) return;
+
+  saveReportBtn.disabled = true;
+  try {
+    const payload = {
+      period: reportPeriod.value,
+      reference_date: reportDate.value,
+      title: range.title,
+      start_date: range.start_date,
+      end_date: range.end_date,
+      content,
+      entry_count: range.entry_count,
+      report_id: currentReport?.id || null,
+    };
+
+    const data = currentReport?.id
+      ? await api(`/reports/${currentReport.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content, title: range.title }),
+        })
+      : await api("/reports", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+    setCurrentReport(data.report);
+    await loadSavedReports();
+    showMessage("报告已保存", "success");
+  } catch (err) {
+    showMessage(err.message, "error");
+  } finally {
+    saveReportBtn.disabled = false;
+  }
+}
+
+async function deleteSavedReport() {
+  if (!currentReport?.id) {
+    showMessage("当前报告尚未保存", "error");
+    return;
+  }
+  if (!confirm(`确定删除已保存报告「${currentReport.title}」？`)) return;
+
+  await api(`/reports/${currentReport.id}`, { method: "DELETE" });
+  reportOutput.value = "";
+  setCurrentReport(null);
+  reportRangeInfo.textContent = "选择报告类型与参考日期";
+  await loadSavedReports();
+  showMessage("已删除保存的报告", "success");
 }
 
 async function loadSettings() {
@@ -244,6 +397,7 @@ async function testSettings() {
 }
 
 const generateBtn = document.getElementById("generateBtn");
+const saveReportBtn = document.getElementById("saveReportBtn");
 const testSettingsBtn = document.getElementById("testSettingsBtn");
 const llmApiBase = document.getElementById("llmApiBase");
 const llmApiKey = document.getElementById("llmApiKey");
@@ -276,19 +430,40 @@ document.getElementById("todayBtn").addEventListener("click", () => selectDate(t
 document.getElementById("saveEntryBtn").addEventListener("click", () => saveEntry().catch((e) => showMessage(e.message, "error")));
 document.getElementById("deleteEntryBtn").addEventListener("click", () => deleteEntry().catch((e) => showMessage(e.message, "error")));
 document.getElementById("generateBtn").addEventListener("click", () => generateReport());
+document.getElementById("saveReportBtn").addEventListener("click", () => saveReport().catch((e) => showMessage(e.message, "error")));
+document.getElementById("deleteReportBtn").addEventListener("click", () => deleteSavedReport().catch((e) => showMessage(e.message, "error")));
 document.getElementById("copyReportBtn").addEventListener("click", async () => {
-  if (!lastReport) {
+  const text = reportOutput.value.trim();
+  if (!text) {
     showMessage("暂无报告可复制", "error");
     return;
   }
-  await navigator.clipboard.writeText(lastReport);
+  await navigator.clipboard.writeText(text);
   showMessage("已复制到剪贴板", "success");
 });
 document.getElementById("saveSettingsBtn").addEventListener("click", () => saveSettings().catch((e) => showMessage(e.message, "error")));
 document.getElementById("testSettingsBtn").addEventListener("click", () => testSettings());
 
-reportPeriod.addEventListener("change", updateReportRangeInfo);
-reportDate.addEventListener("change", updateReportRangeInfo);
+reportPeriod.addEventListener("change", () => {
+  if (currentReport?.id && currentReport.period === reportPeriod.value && currentReport.reference_date === reportDate.value) {
+    return;
+  }
+  if (currentReport?.id) {
+    currentReport.id = null;
+    updateReportMeta();
+  }
+  updateReportRangeInfo();
+});
+reportDate.addEventListener("change", () => {
+  if (currentReport?.id && currentReport.period === reportPeriod.value && currentReport.reference_date === reportDate.value) {
+    return;
+  }
+  if (currentReport?.id) {
+    currentReport.id = null;
+    updateReportMeta();
+  }
+  updateReportRangeInfo();
+});
 entryDate.addEventListener("change", () => selectDate(entryDate.value));
 
 entryDate.value = todayStr();

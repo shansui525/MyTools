@@ -31,10 +31,11 @@ def _load() -> Dict:
         if isinstance(data, dict):
             data.setdefault("entries", {})
             data.setdefault("settings", DEFAULT_SETTINGS.copy())
+            data.setdefault("reports", {})
             return data
     except (json.JSONDecodeError, OSError):
         pass
-    return {"entries": {}, "settings": DEFAULT_SETTINGS.copy()}
+    return {"entries": {}, "settings": DEFAULT_SETTINGS.copy(), "reports": {}}
 
 
 def _save(data: Dict) -> None:
@@ -149,3 +150,112 @@ def update_settings(api_base: str, model: str, api_key: Optional[str] = None) ->
         settings["llm_api_key"] = api_key.strip()
     _save(data)
     return get_settings_public()
+
+
+def _report_summary(report_id: str, item: Dict) -> Dict:
+    content = item.get("content", "")
+    preview = content.replace("\n", " ").strip()[:80]
+    return {
+        "id": report_id,
+        "period": item.get("period", ""),
+        "title": item.get("title", ""),
+        "reference_date": item.get("reference_date", ""),
+        "start_date": item.get("start_date", ""),
+        "end_date": item.get("end_date", ""),
+        "entry_count": item.get("entry_count", 0),
+        "created_at": item.get("created_at", ""),
+        "updated_at": item.get("updated_at", ""),
+        "preview": preview,
+    }
+
+
+def list_reports() -> List[Dict]:
+    """列出已保存报告，按更新时间倒序。"""
+    reports = _load().get("reports", {})
+    items = [_report_summary(rid, item) for rid, item in reports.items()]
+    items.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
+    return items
+
+
+def get_report(report_id: str) -> Optional[Dict]:
+    item = _load().get("reports", {}).get(report_id)
+    if not item:
+        return None
+    return _report_summary(report_id, item) | {"content": item.get("content", "")}
+
+
+def get_report_by_period(period: str, reference_date: str) -> Optional[Dict]:
+    reports = _load().get("reports", {})
+    for rid, item in reports.items():
+        if item.get("period") == period and item.get("reference_date") == reference_date:
+            return _report_summary(rid, item) | {"content": item.get("content", "")}
+    return None
+
+
+def upsert_report(
+    *,
+    period: str,
+    reference_date: str,
+    title: str,
+    start_date: str,
+    end_date: str,
+    content: str,
+    entry_count: int = 0,
+    report_id: Optional[str] = None,
+) -> Dict:
+    content = content.strip()
+    if not content:
+        raise ValueError("报告内容不能为空")
+
+    data = _load()
+    reports = data.setdefault("reports", {})
+    now = _now_iso()
+
+    target_id = report_id
+    if not target_id:
+        for rid, item in reports.items():
+            if item.get("period") == period and item.get("reference_date") == reference_date:
+                target_id = rid
+                break
+
+    if target_id and target_id in reports:
+        item = reports[target_id]
+        item.update(
+            {
+                "period": period,
+                "reference_date": reference_date,
+                "title": title,
+                "start_date": start_date,
+                "end_date": end_date,
+                "content": content,
+                "entry_count": entry_count,
+                "updated_at": now,
+            }
+        )
+    else:
+        target_id = uuid.uuid4().hex
+        reports[target_id] = {
+            "id": target_id,
+            "period": period,
+            "reference_date": reference_date,
+            "title": title,
+            "start_date": start_date,
+            "end_date": end_date,
+            "content": content,
+            "entry_count": entry_count,
+            "created_at": now,
+            "updated_at": now,
+        }
+
+    _save(data)
+    return get_report(target_id)
+
+
+def delete_report(report_id: str) -> bool:
+    data = _load()
+    reports = data.get("reports", {})
+    if report_id not in reports:
+        return False
+    del reports[report_id]
+    _save(data)
+    return True

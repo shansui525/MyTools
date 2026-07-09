@@ -58,10 +58,19 @@
               </select>
               <input type="date" id="reportDate" class="wr-input">
               <button type="button" class="btn btn-primary btn-sm" id="generateBtn">生成报告</button>
+              <button type="button" class="btn btn-primary btn-sm" id="saveReportBtn">保存报告</button>
               <button type="button" class="btn btn-secondary btn-sm" id="copyReportBtn">复制</button>
+              <button type="button" class="btn btn-danger btn-sm" id="deleteReportBtn">删除</button>
             </div>
             <div id="reportRangeInfo" class="wr-report-info">选择报告类型与参考日期</div>
-            <div id="reportOutput" class="wr-report-output">生成的报告将显示在这里</div>
+            <div class="wr-report-layout">
+              <aside class="wr-report-sidebar">
+                <div class="wr-panel-title">已保存报告</div>
+                <ul id="savedReportList" class="wr-saved-report-list"></ul>
+              </aside>
+              <textarea id="reportOutput" class="wr-textarea wr-report-editor" placeholder="生成的报告将显示在这里，可直接编辑后保存"></textarea>
+            </div>
+            <div id="reportMeta" class="wr-report-meta"></div>
           </div>
 
           <div id="tabSettings" class="wr-tab-panel hidden">
@@ -96,6 +105,6 @@
     <p>MyTools &copy; 2026</p>
   </footer>
 
-  <script src="/static/tools/work_report.js?v=1"></script>
+  <script src="/static/tools/work_report.js?v=2"></script>
 </body>
 </html>
